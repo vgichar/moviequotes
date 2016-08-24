@@ -1,0 +1,23 @@
+{
+  "name": "client",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "vgi_ander <vojdan@ander-group.com>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^2.2.4",
+    "jquery-ui": "^1.11.4",
+    "bootstrap": "^3.3.6",
+    "semantic": "semantic-ui#^2.1.8"
+  }
+}

@@ -1,0 +1,14 @@
+.tile{
+	padding: 20px;
+	opacity: 0.95;
+	
+	&:hover{
+		opacity: 1;
+		cursor: pointer;
+	}
+
+	h1{
+		padding: 80px;
+		color: white;
+	}
+}

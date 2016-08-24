@@ -1,0 +1,38 @@
+.m-bg-jquery {
+  background-color: #0769ad; }
+
+.m-fg-jquery {
+  color: #0769ad; }
+
+.m-bg-javascript {
+  background-color: #e55c53; }
+
+.m-fg-javascript {
+  color: #e55c53; }
+
+.rt-cloak {
+  display: none; }
+
+html, body {
+  font-size: 16px;
+  color: #303030; }
+
+body {
+  font-family: "Open Sans"; }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Roboto"; }
+
+a, a:hover {
+  color: #303030;
+  text-decoration: none; }
+
+.tile {
+  padding: 20px;
+  opacity: 0.95; }
+  .tile:hover {
+    opacity: 1;
+    cursor: pointer; }
+  .tile h1 {
+    padding: 80px;
+    color: white; }
