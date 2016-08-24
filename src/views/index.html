@@ -1,8 +1,35 @@
-<div class="row">
-	<a href="/#!/javascript" class="col-md-6 tile">
-		<h1 class="m-bg-javascript">JavaScript</h1>
-	</a>
-	<a href="/#!/jquery" class="col-md-6 tile">
-		<h1 class="m-bg-jquery">jQuery</h1>
-	</a>
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto" rel="stylesheet">
+	<link href="/css/vendor/bootstrap.min.css" rel="stylesheet">
+	<link href="/css/vendor/bootstrap-theme.min.css" rel="stylesheet">
+	<link href="/css/vendor/semantic.min.css" rel="stylesheet">
+	<link href="/css/vendor/font-awesome.min.css" rel="stylesheet">
+	<link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+	<div class="container">
+		<a href="#" onclick="router.back()"><i class="fa fa-arrow-left"></i> Back</a>
+		
+		<rtview></rtview>
+	</div>
+
+	<script type="text/javascript" src="/js/vendor/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/vendor/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="/js/vendor/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/js/vendor/semantic.min.js"></script>
+	<script type="text/javascript" src="/js/compiled-ts.js"></script>
+	<script type="text/javascript">
+		var router = new Library.Router();
+
+		router.register("/", "home.html");
+		router.registerNotFound("errors/404.html");
+		router.defaultConvention(function(route){
+			return route.trim("/") + ".html";
+		});
+	</script>
+</body>
+</html>
