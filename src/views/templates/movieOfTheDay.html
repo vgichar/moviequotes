@@ -1,0 +1,18 @@
+<template name="movieOfTheDay">
+	<h3>Quote of the day</h3>
+	<h4><a href="">{{movie.name}} ({{movie.year}})</a></h4>
+	<div>
+		<a href="">
+			<img src="http://placehold.it/350x150">
+		</a>
+	</div>
+	<br>
+	<p>
+		<a href="">
+			{{quote.text}}
+			<small><br>({{quote.when}} min)</small>
+		</a>
+	</p>
+	<div>{{quote.likes}} Liked this</div>
+	<div>Like, Share, Tweet</div>
+</div>

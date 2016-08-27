@@ -31,7 +31,7 @@ gulp.task('serve', ['watch'], function() {
   gulp.src('dist')
     .pipe(server({
       livereload: true,
-      defaultFile: "layouts/master.html",
+      defaultFile: "index.html",
       open: true,
       port: 3000
     }));

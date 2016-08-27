@@ -2,11 +2,11 @@
 
 module Library{
 	export class Router{
-		public routeMap = {};
-		public notFoundView;
-		public defaultTransformation;
-		public onLoadingCallbacks = [];
-		public onLoadedCallbacks = [];
+		private routeMap = {};
+		private notFoundView;
+		private defaultTransformation;
+		private onLoadingCallbacks = [];
+		private onLoadedCallbacks = [];
 
 		constructor(){
 			this.bootstrap();

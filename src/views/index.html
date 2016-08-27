@@ -11,8 +11,14 @@
 	<link href="/css/style.css" rel="stylesheet">
 </head>
 <body>
-	<div class="container">
-		<a href="#" onclick="router.back()"><i class="fa fa-arrow-left"></i> Back</a>
+	<div class="container-fluid">
+		<nav class="row">
+			<a class="logo" href="/">
+				<img src="http://placehold.it/150x100">
+			</a>
+			<a href="">Movies</a>
+			<a href="">Quotes</a>
+		</nav>
 		
 		<rtview></rtview>
 	</div>
@@ -22,14 +28,14 @@
 	<script type="text/javascript" src="/js/vendor/bootstrap.min.js"></script>
 	<script type="text/javascript" src="/js/vendor/semantic.min.js"></script>
 	<script type="text/javascript" src="/js/compiled-ts.js"></script>
-	<script type="text/javascript">
-		var router = new Library.Router();
 
-		router.register("/", "home.html");
-		router.registerNotFound("errors/404.html");
-		router.defaultConvention(function(route){
-			return route.trim("/") + ".html";
+	<script type="text/javascript">
+		Views.Index.Templater.template("movieOfTheDay", {
+			"movie.name": "Fight club",
+			"movie.year": 1999,
+			"quote.text": "First"
 		});
 	</script>
+
 </body>
 </html>
