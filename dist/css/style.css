@@ -1,18 +1,3 @@
-.m-bg-jquery {
-  background-color: #0769ad; }
-
-.m-fg-jquery {
-  color: #0769ad; }
-
-.m-bg-javascript {
-  background-color: #e55c53; }
-
-.m-fg-javascript {
-  color: #e55c53; }
-
-.rt-cloak {
-  display: none; }
-
 html, body {
   font-size: 16px;
   color: #303030; }
@@ -27,66 +12,58 @@ a, a:hover {
   color: #303030;
   text-decoration: none; }
 
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url("/images/bg.png");
-  z-index: 1;
-  -webkit-transition: -webkit-transform 1s;
-  transition: -webkit-transform 1s;
-  transition: transform 1s;
-  transition: transform 1s, -webkit-transform 1s;
-  -webkit-transition-delay: 2s;
-          transition-delay: 2s;
-  -webkit-transform: translate(0, -100%);
-          transform: translate(0, -100%); }
-  .loading-overlay .loading-reel {
-    margin: auto;
-    display: block;
-    margin-top: 15%;
-    width: 250px;
-    height: auto;
-    -webkit-animation-name: spin;
-            animation-name: spin;
-    -webkit-animation-duration: 2.5s;
-            animation-duration: 2.5s;
-    -webkit-animation-iteration-count: infinite;
-            animation-iteration-count: infinite;
-    -webkit-animation-timing-function: linear;
-            animation-timing-function: linear; }
-  .loading-overlay .loading-text {
-    color: white;
-    font-weight: bold;
-    text-align: center;
-    font-size: 72px;
-    -webkit-transform: scale(1.1, 0.8);
-            transform: scale(1.1, 0.8); }
+.loading-bar {
+  height: 4px;
+  background: #0769ad;
+  -webkit-animation-name: load;
+          animation-name: load;
+  -webkit-animation-duration: 1s;
+          animation-duration: 1s; }
 
-@-webkit-keyframes spin {
-  from {
-    -webkit-transform: rotate(0deg);
-            transform: rotate(0deg); }
-  to {
-    -webkit-transform: rotate(360deg);
-            transform: rotate(360deg); } }
+.loading .loading-bar {
+  -webkit-animation-name: loading;
+          animation-name: loading;
+  -webkit-animation-duration: 1s;
+          animation-duration: 1s; }
 
-@keyframes spin {
-  from {
-    -webkit-transform: rotate(0deg);
-            transform: rotate(0deg); }
-  to {
-    -webkit-transform: rotate(360deg);
-            transform: rotate(360deg); } }
+.loaded .loading-bar {
+  -webkit-animation-name: loaded;
+          animation-name: loaded;
+  -webkit-animation-duration: 1s;
+          animation-duration: 1s; }
 
-.tile {
-  padding: 20px;
-  opacity: 0.95; }
-  .tile:hover {
-    opacity: 1;
-    cursor: pointer; }
-  .tile h1 {
-    padding: 80px;
-    color: white; }
+@-webkit-keyframes load {
+  0% {
+    width: 0; }
+  100% {
+    width: 10%; } }
+
+@keyframes load {
+  0% {
+    width: 0; }
+  100% {
+    width: 10%; } }
+
+@-webkit-keyframes loading {
+  0% {
+    width: 10%; }
+  100% {
+    width: 44%; } }
+
+@keyframes loading {
+  0% {
+    width: 10%; }
+  100% {
+    width: 44%; } }
+
+@-webkit-keyframes loaded {
+  0% {
+    width: 44%; }
+  100% {
+    width: 100%; } }
+
+@keyframes loaded {
+  0% {
+    width: 44%; }
+  100% {
+    width: 100%; } }

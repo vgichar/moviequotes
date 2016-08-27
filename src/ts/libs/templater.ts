@@ -146,19 +146,20 @@ module Library{
 			let nodes = elTemplateSubstituteNode.childNodes;
 
 			for(let i = 0; i < nodes.length; i++){
-				if(nodes[i].nodeName == "SCRIPT")
+				let node: any = nodes[i];
+				if(node.nodeName == "SCRIPT")
 				{
 					let scriptTag = document.createElement("script");
-					scriptTag.innerHTML = nodes[i].innerHTML;
+					scriptTag.innerHTML = node.innerHTML;
 					elBlock.parentElement.insertBefore(scriptTag, elBlock);
 				}
 				else if(nodes[i].nodeName == "#text"){
-					let textNode = document.createTextNode(nodes[i].textContent);
+					let textNode = document.createTextNode(node.textContent);
 					elBlock.parentElement.insertBefore(textNode, elBlock);
 				}
 				else
 				{
-					elBlock.parentElement.insertBefore(nodes[i], elBlock);
+					elBlock.parentElement.insertBefore(node, elBlock);
 				}
 			}
 			elBlock.remove();

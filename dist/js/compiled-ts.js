@@ -210,17 +210,18 @@ var Library;
                 elTemplateSubstituteNode.innerHTML = elTemplate.innerHTML;
                 var nodes = elTemplateSubstituteNode.childNodes;
                 for (var i = 0; i < nodes.length; i++) {
-                    if (nodes[i].nodeName == "SCRIPT") {
+                    var node = nodes[i];
+                    if (node.nodeName == "SCRIPT") {
                         var scriptTag = document.createElement("script");
-                        scriptTag.innerHTML = nodes[i].innerHTML;
+                        scriptTag.innerHTML = node.innerHTML;
                         elBlock.parentElement.insertBefore(scriptTag, elBlock);
                     }
                     else if (nodes[i].nodeName == "#text") {
-                        var textNode = document.createTextNode(nodes[i].textContent);
+                        var textNode = document.createTextNode(node.textContent);
                         elBlock.parentElement.insertBefore(textNode, elBlock);
                     }
                     else {
-                        elBlock.parentElement.insertBefore(nodes[i], elBlock);
+                        elBlock.parentElement.insertBefore(node, elBlock);
                     }
                 }
                 elBlock.remove();

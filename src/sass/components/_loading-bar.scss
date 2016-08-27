@@ -1,0 +1,36 @@
+.loading-bar{
+	height: 4px;
+	background: $clBrand;
+
+	animation-name: load;
+	animation-duration: 1s;
+}
+
+.loading{
+	.loading-bar{
+		animation-name: loading;
+		animation-duration: 1s;
+	}
+}
+
+.loaded{
+	.loading-bar{
+		animation-name: loaded;
+		animation-duration: 1s;
+	}
+}
+
+@keyframes load{
+    0%   {width: 0;}
+    100% {width: 10%;}
+}
+
+@keyframes loading{
+    0%   {width: 10%;}
+    100% {width: 44%;}
+}
+
+@keyframes loaded{
+    0%   {width: 44%;}
+    100% {width: 100%;}
+}
