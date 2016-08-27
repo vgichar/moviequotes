@@ -4,6 +4,7 @@ var sassGlob = require('gulp-sass-glob');
 var ts = require("gulp-typescript");
 var imagemin = require("gulp-imagemin");
 var server = require('gulp-server-livereload');
+var autoprefixer = require('gulp-autoprefixer');
 
 var vendorScripts = [
 	'bower_components/bootstrap/dist/js/bootstrap.min.js',
@@ -40,16 +41,20 @@ gulp.task('serve', ['watch'], function() {
 gulp.task("watch", ["build"], function(){
     gulp.watch('src/sass/**', ['build-sass']);
     gulp.watch('src/ts/**', ['build-typescript']);
-    gulp.watch('src/images/**', ['minify-images']);
     gulp.watch('src/views/**', ['copy-views']);
+    gulp.watch('src/images/**', ['copy-images']);
+    gulp.watch('src/favicon.ico', ['copy-favicon']);
 });
 
-gulp.task("build", ["build-sass", "build-typescript", "minify-images", "copy-views", "copy-vendor"]);
+gulp.task("build", ["build-sass", "build-typescript", "copy-views", "copy-images", "copy-favicon", "copy-vendor"]);
 
 gulp.task("build-sass", function(){ 
     gulp.src('src/sass/style.scss')
       .pipe(sassGlob())
       .pipe(sass())
+      .pipe(autoprefixer({
+            browsers: ['> 1%']
+        }))
       .pipe(gulp.dest('dist/css/'));
 });
 
@@ -61,14 +66,19 @@ gulp.task("build-typescript", function(){
         .pipe(gulp.dest('dist/js'))
 });
 
-gulp.task("minify-images", function(){
+gulp.task("copy-views", function(){
+    gulp.src('src/views/**/*')
+        .pipe(gulp.dest('dist'))
+});
+
+gulp.task("copy-images", function(){
     gulp.src('src/images/**/*')
         .pipe(imagemin())
         .pipe(gulp.dest('dist/images'))
 });
 
-gulp.task("copy-views", function(){
-    gulp.src('src/views/**/*')
+gulp.task("copy-favicon", function(){
+    gulp.src('src/favicon.ico')
         .pipe(gulp.dest('dist'))
 });
 

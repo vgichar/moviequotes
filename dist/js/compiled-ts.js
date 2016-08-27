@@ -20,6 +20,8 @@ var Library;
                         rtViews[i].className = rtViews[i].className ? rtViews[i].className.replace("loaded", "") : "";
                         rtViews[i].className += "loading";
                     }
+                    document.body.className = document.body.className ? document.body.className.replace("loaded", "") : "";
+                    document.body.className += "loading";
                     for (var i in self.onLoadingCallbacks) {
                         self.onLoadingCallbacks[i]();
                     }
@@ -29,6 +31,8 @@ var Library;
                             rtViews[i].className += "loaded";
                             rtViews[i].innerHTML = childViewHtml;
                         }
+                        document.body.className = document.body.className ? document.body.className.replace("loading", "") : "";
+                        document.body.className += "loaded";
                         for (var i in self.onLoadedCallbacks) {
                             self.onLoadedCallbacks[i]();
                         }
