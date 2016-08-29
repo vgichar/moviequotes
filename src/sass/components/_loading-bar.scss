@@ -1,36 +1,69 @@
 .loading-bar{
-	height: 4px;
+	position: absolute;
 	background: $clBrand;
 
 	animation-name: load;
-	animation-duration: 1s;
+	animation-duration: 2s;
 }
 
 .loading{
 	.loading-bar{
 		animation-name: loading;
-		animation-duration: 1s;
+		animation-duration: 2s;
 	}
 }
 
 .loaded{
 	.loading-bar{
 		animation-name: loaded;
-		animation-duration: 1s;
+		animation-duration: 2s;
 	}
 }
 
 @keyframes load{
-    0%   {width: 0;}
-    100% {width: 10%;}
+    0%   {
+    	width: 0;
+		height: 4px;
+	}
+    100% {
+    	width: 5%;
+		height: 4px;
+	}
 }
 
 @keyframes loading{
-    0%   {width: 10%;}
-    100% {width: 44%;}
+    0%   {
+    	width: 5%;
+		height: 4px;
+	}
+    50%   {
+    	width: 15%;
+		height: 4px;
+	}
+    75%   {
+    	width: 40%;
+		height: 4px;
+	}
+    100% {
+    	width: 49%;
+		height: 4px;
+	}
 }
 
 @keyframes loaded{
-    0%   {width: 44%;}
-    100% {width: 100%;}
+    0%   {
+    	width: 49%;
+		height: 4px;
+	}
+    70%   {
+    	width: 89%;
+		height: 4px;
+	}
+    99% {
+    	width: 100%; 
+    	height: 4px;
+    }
+    100% {
+    	height: 0;
+    }
 }
