@@ -43,10 +43,12 @@ gulp.task("watch", ["build"], function(){
     gulp.watch('src/ts/**', ['build-typescript']);
     gulp.watch('src/views/**', ['copy-views']);
     gulp.watch('src/images/**', ['copy-images']);
+    gulp.watch('src/json/**/*.json', ['copy-json']);
+    gulp.watch('src/**/*.js', ['copy-js']);
     gulp.watch('src/favicon.ico', ['copy-favicon']);
 });
 
-gulp.task("build", ["build-sass", "build-typescript", "copy-views", "copy-images", "copy-favicon", "copy-vendor"]);
+gulp.task("build", ["build-sass", "build-typescript", "copy-views", "copy-images", "copy-json", "copy-favicon", "copy-vendor", "copy-js"]);
 
 gulp.task("build-sass", function(){ 
     gulp.src('src/sass/style.scss')
@@ -77,9 +79,19 @@ gulp.task("copy-images", function(){
         .pipe(gulp.dest('dist/images'))
 });
 
+gulp.task("copy-json", function(){
+    gulp.src('src/json/**/*.json')
+        .pipe(gulp.dest('dist/json'))
+});
+
 gulp.task("copy-favicon", function(){
     gulp.src('src/favicon.ico')
         .pipe(gulp.dest('dist'))
+});
+
+gulp.task("copy-js", function(){
+    gulp.src('src/ts/**/*.js')
+        .pipe(gulp.dest('dist/js'))
 });
 
 gulp.task("copy-vendor", function(){

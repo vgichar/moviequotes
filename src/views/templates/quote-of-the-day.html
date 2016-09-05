@@ -1,14 +1,14 @@
-<template name="movieOfTheDay">
+<template name="quote-of-the-day">
 	<h3>Quote of the day</h3>
-	<h4><a href="">{{movie.name}} ({{movie.year}})</a></h4>
+	<h4><a href="#!/movie-details/{{movie.id}}">{{movie.name}} ({{movie.year}})</a></h4>
 	<div>
-		<a href="">
+		<a href="#!/movie-details/{{movie.id}}">
 			<img src="http://placehold.it/200x250">
 		</a>
 	</div>
 	<br>
 	<p>
-		<a href="">
+		<a href="#!/movie-details/{{movie.id}}">
 			{{quote.text}}
 			<small><br>({{quote.when}} min)</small>
 		</a>

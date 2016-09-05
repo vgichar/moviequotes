@@ -1,11 +1,11 @@
-/// <reference path="../../../typings/tsd.d.ts" />
+/// <reference path="../_references.ts" />
 
 module Library{
 	export class Templater{
 		private templatesPath = "";
 		private blocks = [];
 		private templates = [];
-		private templateCallbacks = [];
+		private templatesData = [];
 		private prevBlocksCount = 0;
 
 		constructor(){
@@ -40,13 +40,7 @@ module Library{
 
 		public template = (name, variables) => {
 			let self = this;
-			self.templateCallbacks.push(function(){
-				variables = self.flattenJSON(variables);
-				let block = self.blocks[name];
-				for(let v in variables){
-					block.setAttribute(v.replace(".", "-"), variables[v]);
-				}
-			});
+			self.templatesData[name] = self.flattenJSON(variables);
 		}
 
 		private scanBlocks = () =>{
@@ -79,22 +73,18 @@ module Library{
 				let templateExists = this.templates[name] != undefined;
 				if(!templateExists){
 					shouldLoad++;
-					this.loadTemplate(name, function(e, xhr){
+					let path = "templates/" + name + ".html";
+					Library.Utils.loadFile(path, function(data){
+						let elTemplateParent = document.createElement("div");
+						elTemplateParent.innerHTML = data;
+						let elTemplate = elTemplateParent.firstChild;
+						document.body.appendChild(elTemplate);
 
-						if (xhr.readyState === 4) {
-							if (xhr.status === 200) {
-								let elTemplateParent = document.createElement("div");
-								elTemplateParent.innerHTML = xhr.responseText;
-								let elTemplate = elTemplateParent.firstChild;
-								document.body.appendChild(elTemplate);
-
-								countLoaded++;
-								if(shouldLoad == countLoaded){
-									onLoadAll();
-								}
-							}
+						countLoaded++;
+						if(shouldLoad == countLoaded){
+							onLoadAll();
 						}
-					})
+					}, undefined);
 				}
 			}
 
@@ -106,22 +96,17 @@ module Library{
 			return true;
 		}
 
-		private loadTemplate = (fileName, onLoad) => {
-			let filePath = this.templatesPath + "/" + fileName + ".html";
-
-			var xhr = new XMLHttpRequest();
-			xhr.open("GET", filePath, true);
-			xhr.onload = function(e){
-				onLoad(e, xhr);
-			};
-			xhr.send(null);
-		}
-
 		private setVariablesAsAttributes = () => {
-			for(let i in this.templateCallbacks){
-				this.templateCallbacks[i]();
+			for(let i in this.templatesData){
+				let variables = this.templatesData[i];
+				let block = this.blocks[i];
+
+				if(block){
+					for(let v in variables){
+						block.setAttribute(v.replace(".", "-"), variables[v]);
+					}
+				}
 			}
-			this.templateCallbacks = [];			
 		}
 
 		private injectTemplates = () => {
@@ -169,7 +154,7 @@ module Library{
 		private replaceVariables = (elBlock, elTemplate) => {
 			let attrs = elBlock.attributes;
 			for(let i = 0; i < attrs.length; i++){
-				elTemplate.innerHTML = elTemplate.innerHTML.replace("{{" + attrs[i].name.replace("-", ".") + "}}", attrs[i].value);
+				elTemplate.innerHTML = elTemplate.innerHTML.replace(new RegExp("{{" + attrs[i].name.replace("-", ".") + "}}", 'g'), attrs[i].value);
 			}
 		}
 

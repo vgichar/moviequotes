@@ -30,15 +30,10 @@
 	<script type="text/javascript" src="/js/vendor/jquery-ui.min.js"></script>
 	<script type="text/javascript" src="/js/vendor/bootstrap.min.js"></script>
 	<script type="text/javascript" src="/js/vendor/semantic.min.js"></script>
+	<script type="text/javascript" src="/js/libs/linq.js"></script>
 	<script type="text/javascript" src="/js/compiled-ts.js"></script>
-
 	<script type="text/javascript">
-		Views.Index.Templater.template("movieOfTheDay", {
-			"movie.name": "Fight club",
-			"movie.year": 1999,
-			"quote.text": "First"
-		});
+		new Views.Index().boot();
 	</script>
-
 </body>
 </html>

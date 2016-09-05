@@ -1,7 +1,9 @@
-/// <reference path="../../../typings/tsd.d.ts" />
+/// <reference path="../_references.ts" />
 
 module Library{
 	export class Router{
+		private routeCache = {};
+		private routeCacheSize = 100;
 		private routeMap = {};
 		private notFoundView;
 		private defaultTransformation;
@@ -17,11 +19,9 @@ module Library{
 
 			$(window).on("load hashchange", function(){
 				let route = self.getCurrentRoute();
-				let view = self.routeMap[route];
-
-				if(!view && self.defaultTransformation){
-					view = self.defaultTransformation(route);
-				}
+				let view = self.getViewOfRoute(route);
+				let args = self.getArgumentsOfRoute(route);
+				let entry = self.getRouteEntry(route);
 
 				let rtViews = document.getElementsByTagName('rtview');
 
@@ -37,7 +37,11 @@ module Library{
 					self.onLoadingCallbacks[i]();
 				}
 
-				$.get(view).done(function(childViewHtml){
+				Library.Utils.loadFile(view, function(childViewHtml){
+					if(entry.beforeLoad){
+						entry.beforeLoad(route, args);
+					}
+
 					for(let i in rtViews){
 						rtViews[i].className = rtViews[i].className ? rtViews[i].className.replace("loading", ""): "";
 						rtViews[i].className += "loaded";
@@ -50,7 +54,11 @@ module Library{
 					for(let i in self.onLoadedCallbacks){
 						self.onLoadedCallbacks[i]();
 					}
-				}).fail(function(){
+
+					if(entry.afterLoad){
+						entry.afterLoad(route, args);
+					}
+				}, function(){
 					$.get(self.notFoundView).done(function(errorViewHtml){
 						for(let i in rtViews){
 							rtViews[i].innerHTML = errorViewHtml;
@@ -68,9 +76,9 @@ module Library{
 			window.history.back();
 		}
 
-		public register = (route, view) => {
+		public register = (route, view, beforeLoad = undefined, afterLoad = undefined) => {
 			route = this.prepRouteForQuerying(route);
-			this.routeMap[route] = view;
+			this.routeMap[route] = {view : view, beforeLoad : beforeLoad, afterLoad : afterLoad, route: route };
 		}
 
 		public registerNotFound = (view) => {
@@ -109,6 +117,91 @@ module Library{
 			route = this.prepRouteForQuerying(route);
 
 			return route;
+		}
+
+		private getViewOfRoute = (route) => {
+			let self = this;
+			let entry = self.getRouteEntry(route);
+			let view = entry ? entry.view : undefined;
+
+			if(!view){
+				if(self.defaultTransformation){
+					view = self.defaultTransformation(route);
+				}
+			}
+
+			return view;
+		}
+
+		private getArgumentsOfRoute = (route) => {
+			let self = this;
+			let entry = self.getRouteEntry(route);
+
+			return entry ? self.getRouteArguments(route, entry.route) : {};
+		}
+
+		private getRouteEntry = (route) => {
+			let self = this;
+			let entry = self.routeCache[route] || self.routeMap[route];
+			let entryRoute = route;
+
+			if(!entry){
+				entryRoute = self.getRouteEntryWithWildcard(route);
+				if(entryRoute){
+					entry = self.routeMap[entryRoute];
+				}
+			}
+
+			if(entry){
+				self.routeCache[route] = entry;
+			}
+
+			return entry;
+		}
+
+		private getRouteEntryWithWildcard = (route) => {
+			let self = this;
+			let routeParts = route.split("/");
+			let mapKeys = Object.keys(self.routeMap);
+
+			for(let k in mapKeys){
+				let key = mapKeys[k];
+				let keyParts = key.split("/");
+
+				if(routeParts.length != keyParts.length){
+					continue;
+				}
+
+				let wildcardsMatch = key.match(new RegExp("{.*}", "g"));
+				if(wildcardsMatch){
+					let numOfWildcards = wildcardsMatch.length;
+
+					for(let i = 1; i < numOfWildcards + 1; i++){
+						let subroute = routeParts.slice(0, routeParts.length - i).join("/");
+						let subrouteWild = Library.Utils.initArray(i, "/{.*}").join("");
+
+							let findKey = key.match(new RegExp(subroute + subrouteWild));
+							if(findKey){
+								return key
+						}
+					}
+				}
+			}
+
+			return undefined;
+		}
+
+		private getRouteArguments = (route, routeKey) => {
+			let resultObj = {};
+			let routeParts = route.split("/");
+			let routeKeyParts = routeKey.split("/");
+			for(let i = 0; i < routeParts.length; i++){
+				if(routeKeyParts[i].match(/\{.*\}/g)){
+					resultObj[routeKeyParts[i].replace("{", "").replace("}", "")] = routeParts[i];
+				}
+			}
+
+			return resultObj;
 		}
 	}
 }

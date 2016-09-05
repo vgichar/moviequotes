@@ -17,20 +17,20 @@ a, a:hover {
   background: #0769ad;
   -webkit-animation-name: load;
           animation-name: load;
-  -webkit-animation-duration: 2s;
-          animation-duration: 2s; }
+  -webkit-animation-duration: 1.4s;
+          animation-duration: 1.4s; }
 
 .loading .loading-bar {
   -webkit-animation-name: loading;
           animation-name: loading;
-  -webkit-animation-duration: 2s;
-          animation-duration: 2s; }
+  -webkit-animation-duration: 1.4s;
+          animation-duration: 1.4s; }
 
 .loaded .loading-bar {
   -webkit-animation-name: loaded;
           animation-name: loaded;
-  -webkit-animation-duration: 2s;
-          animation-duration: 2s; }
+  -webkit-animation-duration: 1.4s;
+          animation-duration: 1.4s; }
 
 @-webkit-keyframes load {
   0% {
