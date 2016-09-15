@@ -18,10 +18,14 @@ module Views{
 		private preloadFiles = () => {
 			Index.Filer.preloadFiles([
 				"home.html",
+				"movies.html",
 				"movie-details.html",
 				"templates/movie-details-template.html",
-				"templates/quote-of-the-day.html",
-				"json/movies.json"
+				"templates/quote-card-template.html",
+				"templates/quotes-template.html",
+				"templates/movies-template.html",
+				"json/movies.json",
+				"json/quotes.json"
 			]);
 		}
 
