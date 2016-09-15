@@ -1,0 +1,42 @@
+[
+	{
+		"id": 0,
+		"movieId": 10,
+		"text": "Best quote 1!"
+	},
+	{
+		"id": 1,
+		"movieId": 1,
+		"text": "Best quote 2!"
+	},
+	{
+		"id": 2,
+		"movieId": 2,
+		"text": "Best quote 3!"
+	},
+	{
+		"id": 3,
+		"movieId": 3,
+		"text": "Best quote 4!"
+	},
+	{
+		"id": 4,
+		"movieId": 4,
+		"text": "Best quote 5!"
+	},
+	{
+		"id": 5,
+		"movieId": 5,
+		"text": "Best quote 6!"
+	},
+	{
+		"id": 6,
+		"movieId": 6,
+		"text": "Best quote 7!"
+	},
+	{
+		"id": 7,
+		"movieId": 7,
+		"text": "Best quote 8!"
+	}
+]

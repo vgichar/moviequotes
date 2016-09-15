@@ -34,12 +34,12 @@ module Library{
 				document.body.className += "loading";
 
 				for(let i in self.onLoadingCallbacks){
-					self.onLoadingCallbacks[i]();
+					self.onLoadingCallbacks[i](route);
 				}
 
 				Library.Utils.loadFile(view, function(childViewHtml){
-					if(entry.beforeLoad){
-						entry.beforeLoad(route, args);
+					if(entry.controller && entry.controller.beforeLoad){
+						entry.controller.beforeLoad(route, args);
 					}
 
 					for(let i in rtViews){
@@ -52,11 +52,11 @@ module Library{
 					document.body.className += "loaded";
 
 					for(let i in self.onLoadedCallbacks){
-						self.onLoadedCallbacks[i]();
+						self.onLoadedCallbacks[i](route);
 					}
 
-					if(entry.afterLoad){
-						entry.afterLoad(route, args);
+					if(entry.controller && entry.controller.afterLoad){
+						entry.controller.afterLoad(route, args);
 					}
 				}, function(){
 					$.get(self.notFoundView).done(function(errorViewHtml){
@@ -76,9 +76,9 @@ module Library{
 			window.history.back();
 		}
 
-		public register = (route, view, beforeLoad = undefined, afterLoad = undefined) => {
+		public register = (route, view, controller = undefined) => {
 			route = this.prepRouteForQuerying(route);
-			this.routeMap[route] = {view : view, beforeLoad : beforeLoad, afterLoad : afterLoad, route: route };
+			this.routeMap[route] = {view : view, controller : controller, route: route };
 		}
 
 		public registerNotFound = (view) => {

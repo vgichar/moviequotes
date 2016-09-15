@@ -2,52 +2,53 @@
 
 module DB{
 	class Movie{
+		public id: number;
 		public title: string;
 		public year: number;
 		public coverPhoto: string;
 	}
 
 	export class MoviesDB{
-		public static all = () : any[] => {
+		public static all = () : {id:number, title:string, year:number, coverPhoto:string}[] => {
 			return Library.Filer.Current().getFile("json/movies.json");
 		}
 
-		public static take = (offset, take) => {
+		public static take = (offset, take): {id:number, title:string, year:number, coverPhoto:string}[] => {
 			return MoviesDB.all().slice(offset, offset + take);
 		}
 
-		public static get = (id) => {
+		public static get = (id): {id:number, title:string, year:number, coverPhoto:string} => {
 			id = parseInt(id.toString());
-			return MoviesDB.all()[id];
+			return Enumerable.From(MoviesDB.all()).Single(x => x.id == id);
 		}
 
-		public static getMovieOfTheDay = () => {
+		public static getMovieOfTheDay = (): {id:number, title:string, year:number, coverPhoto:string} => {
 			let movies = MoviesDB.all();
-			let previous = LocalStorageMovies.getPreviousMoviesOfTheDay();
-			let current = LocalStorageMovies.getCurrentMovieOfTheDay();
+			let previous = LocalStorageMovies.getPreviousMovies();
+			let current = LocalStorageMovies.getCurrentMovie();
 
 			if(!current){
-				let hash = Library.Utils.hashCode(Library.Utils.today()) % movies.length;
-				LocalStorageMovies.setCurrentMovieOfTheDay(hash);
+				let hash = Library.Utils.hashCode(Library.Utils.now()) % movies.length;
+				LocalStorageMovies.setCurrentMovie(hash, Library.Utils.today(), Library.Utils.today(1));
 				return MoviesDB.get(hash);
 			}
 
-			if(current.date == Library.Utils.today()){
+			if(current.dateFrom <= Library.Utils.now() && current.dateTo >= Library.Utils.now()){
 				return MoviesDB.get(current.id);
 			}else{
-				LocalStorageMovies.addPreviousMovieOfTheDay(current.id, current.date);
+				LocalStorageMovies.addPreviousMovie(current.id, current.dateFrom, current.dateTo);
 
 				if(previous.length == movies.length){
-					LocalStorageMovies.resetPreviousMoviesOfTheDay();
+					LocalStorageMovies.resetPreviousMovies();
 				}
 
 				let prevIds = Enumerable.From(previous).Select(x => x.id);
 				let movieIds = Library.Utils.initArrayOrdered(movies.length);
 				let notSeen = Enumerable.From(movieIds).Except(prevIds).ToArray();
 
-				let hash = Library.Utils.hashCode(Library.Utils.today()) % notSeen.length;
+				let hash = Library.Utils.hashCode(Library.Utils.now()) % notSeen.length;
 
-				LocalStorageMovies.setCurrentMovieOfTheDay(hash);
+				LocalStorageMovies.setCurrentMovie(hash, Library.Utils.today(), Library.Utils.today(1));
 
 				return MoviesDB.get(hash);
 			}
@@ -55,8 +56,8 @@ module DB{
 	}
 
 	class LocalStorageMovies{
-		public static getPreviousMoviesOfTheDay = () => {
-			let moviesJson = localStorage["previousMoviesOfTheDay"];
+		public static getPreviousMovies = () => {
+			let moviesJson = localStorage["previousMovies"];
 			let movies = [];
 			if(moviesJson){
 				movies = JSON.parse(moviesJson);
@@ -64,26 +65,26 @@ module DB{
 			return movies;
 		}
 
-		public static addPreviousMovieOfTheDay = (id, date) => {
-			let movies = LocalStorageMovies.getPreviousMoviesOfTheDay();
+		public static addPreviousMovie = (id, dateFrom, dateTo) => {
+			let movies = LocalStorageMovies.getPreviousMovies();
 			id = parseInt(id.toString());
-			movies.push({id: id, date: date});
-			localStorage["previousMoviesOfTheDay"] = JSON.stringify(movies);
+			movies.push({id: id, dateFrom: dateFrom, dateTo: dateTo});
+			localStorage["previousMovies"] = JSON.stringify(movies);
 		}
 
-		public static resetPreviousMoviesOfTheDay = () => {
-			localStorage["previousMoviesOfTheDay"] = JSON.stringify([]);
+		public static resetPreviousMovies = () => {
+			localStorage["previousMovies"] = JSON.stringify([]);
 
 		}
 
-		public static getCurrentMovieOfTheDay = () => {
-			let movie = localStorage["currentMovieOfTheDay"];
+		public static getCurrentMovie = () => {
+			let movie = localStorage["currentMovie"];
 			return movie ? JSON.parse(movie): undefined;
 		}
 
-		public static setCurrentMovieOfTheDay = (id) => {
+		public static setCurrentMovie = (id, dateFrom, dateTo) => {
 			id = parseInt(id.toString());
-			localStorage["currentMovieOfTheDay"] = JSON.stringify({id: id, date: Library.Utils.today()});
+			localStorage["currentMovie"] = JSON.stringify({id: id, dateFrom: dateFrom, dateTo});
 		}
 	}
 }

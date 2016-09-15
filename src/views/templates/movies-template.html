@@ -1,0 +1,21 @@
+<template name="movies-template">
+	<div class="movies">
+		<h3>Movies</h3>
+
+		{{for movie in movies}}
+			<a href="#!/movie-details/{{movie.id}}" class="well row">
+				<div class="col-sm-2">
+					<img src="{{movie.cover-photo}}" />
+				</div>
+				<div class="col-sm-10">
+					<strong>{{movie.title}}</strong>
+					<div class="social">
+						<span>Like</span>
+						<span>Share</span>
+						<span>Tweet</span>
+					</div>
+				</div>
+			</a>
+		{{endfor}}
+	</div>
+</template>

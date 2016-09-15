@@ -29,11 +29,12 @@ module Library{
 			return result;
 		}
 
-		public static today = () => {
+		public static today = (addDays = 0, addMonths = 0, addYears = 0) => {
 			let today = new Date();
-			let dd = today.getDate();
-			let mm = today.getMonth()+1; //January is 0!
-			let yyyy = today.getFullYear();
+			let desiredDate = new Date(today.getFullYear() + addYears, today.getMonth() + addMonths, today.getDate() + addDays, today.getHours(), today.getMinutes(), today.getSeconds());
+			let dd = desiredDate.getDate();
+			let mm = desiredDate.getMonth()+1; //January is 0!
+			let yyyy = desiredDate.getFullYear();
 
 			let d: string = dd.toString();
 			let m: string = mm.toString();
@@ -46,7 +47,56 @@ module Library{
 			    m = '0' + mm;
 			} 
 
-			return d + '/' + m + '/' + yyyy;
+			return yyyy + '/' + m + '/' + d;
+		}
+
+		public static now = (addSeconds = 0, addMinutes = 0, addHours = 0, addDays = 0, addMonths = 0, addYears = 0) => {
+
+			let today = new Date();
+			let desiredDate = new Date(today.getFullYear() + addYears, today.getMonth() + addMonths, today.getDate() + addDays, today.getHours() + addHours, today.getMinutes() + addMinutes, today.getSeconds() + addSeconds);
+			let ss = desiredDate.getSeconds();
+			let min = desiredDate.getMinutes();
+			let hh = desiredDate.getHours();
+			let dd = desiredDate.getDate();
+			let mm = desiredDate.getMonth()+1; //January is 0!
+			let yyyy = desiredDate.getFullYear();
+
+			let d: string = dd.toString();
+			let m: string = mm.toString();
+			let h: string = hh.toString();
+			let mi: string = min.toString();
+			let s: string = ss.toString();
+
+			if(dd < 10) {
+			    d = '0' + dd;
+			} 
+
+			if(mm < 10) {
+			    m = '0' + mm;
+			} 
+
+
+			if(dd < 10) {
+			    d = '0' + dd;
+			} 
+
+			if(mm < 10) {
+			    m = '0' + mm;
+			} 
+
+			if(hh < 10) {
+			    h = '0' + hh;
+			} 
+
+			if(min < 10) {
+			    mi = '0' + min;
+			} 
+
+			if(ss < 10) {
+			    s = '0' + ss;
+			} 
+
+			return yyyy + '/' + m + '/' + d + " " + h + ":" + mi + ":" + s;
 		}
 
 		public static hashCode = function(str) {
@@ -58,6 +108,43 @@ module Library{
 				hash |= 0; // Convert to 32bit integer
 			}
 			return Math.abs(hash);
-		};
+		}
+
+		public static flattenJSON = (data) => {
+		    var result = {};
+		    function recurse (cur, prop) {
+		        if (Object(cur) !== cur) {
+		            result[prop] = cur;
+		        } else if (Array.isArray(cur)) {
+		            for(var i=0, l=cur.length; i<l; i++)
+		                recurse(cur[i], prop + "[" + i + "]");
+		            if (l == 0)
+		                result[prop] = [];
+		        } else {
+		            var isEmpty = true;
+		            for (var p in cur) {
+		                isEmpty = false;
+		                recurse(cur[p], prop ? prop+"."+p : p);
+		            }
+		            if (isEmpty && prop)
+		                result[prop] = {};
+		        }
+		    }
+		    recurse(data, "");
+		    return result;
+		}
+
+		public static camelToKebabCase = (str: string) => {
+			let result = "";
+			for(let i = 0; i < str.length; i++){
+				if(str[i] >= 'A' && str[i] <= 'Z'){
+					result += "-" + str[i].toLowerCase();
+				}else{
+					result += str[i];
+				}
+			}
+
+			return result;
+		}
 	}
 }

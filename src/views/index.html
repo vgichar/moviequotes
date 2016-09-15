@@ -16,14 +16,24 @@
 	</div>
 	<div class="container-fluid loading">
 		<nav class="row">
-			<a class="logo" href="/">
-				<img src="http://placehold.it/150x100">
+			<a class="menu-item logo" href="/#!/">
+				<img src="images/film-reel.png">
 			</a>
-			<a href="">Movies</a>
-			<a href="">Quotes</a>
+			<a class="menu-item" href="/#!/movies">Movies</a>
+			<a class="menu-item" href="/#!/quotes">Quotes</a>
+			<a class="menu-item" href="/#!/quiz">Quiz</a>
 		</nav>
 		
-		<rtview></rtview>
+		<div class="content">
+			<div class="row">
+				<div class="col-md-offset-2 col-md-7">
+					<rtview></rtview>
+				</div>
+				<div class="col-md-3">
+					<block name="quote-card-template"></block>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<script type="text/javascript" src="/js/vendor/jquery.min.js"></script>

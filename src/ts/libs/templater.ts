@@ -8,8 +8,11 @@ module Library{
 		private templatesData = [];
 		private prevBlocksCount = 0;
 
+		private interpolationRules: Function[] = [];
+
 		constructor(){
 			this.bootstrap();
+			DefaultInterpolationRules.init(this);
 		}
 
 		private bootstrap = () => {
@@ -33,14 +36,17 @@ module Library{
 				self.scanBlocks();
 				self.scanTemplates();
 
-				self.setVariablesAsAttributes();
 				self.injectTemplates();
 			})
 		}
 
 		public template = (name, variables) => {
 			let self = this;
-			self.templatesData[name] = self.flattenJSON(variables);
+			self.templatesData[name] = variables;
+		}
+
+		public addInterpolationRule = (callback: Function) => {
+			this.interpolationRules.push(callback);
 		}
 
 		private scanBlocks = () =>{
@@ -96,19 +102,6 @@ module Library{
 			return true;
 		}
 
-		private setVariablesAsAttributes = () => {
-			for(let i in this.templatesData){
-				let variables = this.templatesData[i];
-				let block = this.blocks[i];
-
-				if(block){
-					for(let v in variables){
-						block.setAttribute(v.replace(".", "-"), variables[v]);
-					}
-				}
-			}
-		}
-
 		private injectTemplates = () => {
 			let self = this;
 			for(let i in self.blocks){
@@ -116,9 +109,12 @@ module Library{
 
 				let elBlock = self.blocks[name];
 				let elTemplate = self.templates[name];
+				let templateData = self.templatesData[name];
 
 				if(elBlock && elTemplate){
-					self.replaceVariables(elBlock, elTemplate);
+					for(let j in self.interpolationRules){
+						self.interpolationRules[j](elTemplate, templateData);
+					}
 					self.replaceHtml(elBlock, elTemplate);
 				}
 			}
@@ -150,36 +146,49 @@ module Library{
 			elBlock.remove();
 			elTemplate.remove();
 		}
+	}
 
-		private replaceVariables = (elBlock, elTemplate) => {
-			let attrs = elBlock.attributes;
-			for(let i = 0; i < attrs.length; i++){
-				elTemplate.innerHTML = elTemplate.innerHTML.replace(new RegExp("{{" + attrs[i].name.replace("-", ".") + "}}", 'g'), attrs[i].value);
+
+	class DefaultInterpolationRules{
+		public static init = (templater) => {
+			
+			templater.addInterpolationRule(DefaultInterpolationRules.renderFieldsRule);
+			templater.addInterpolationRule(DefaultInterpolationRules.foreachRule);
+		}
+
+		private static renderFieldsRule = (elTemplate, templateData) => {
+			let flatData = Library.Utils.flattenJSON(templateData);
+			for(let field in flatData){
+				let value = flatData[field]; 
+				elTemplate.innerHTML = elTemplate.innerHTML.replace(new RegExp("{{\\s*" + Library.Utils.camelToKebabCase(field) + "\\s*}}", 'g'), value);
 			}
 		}
 
-		private flattenJSON = (data) => {
-		    var result = {};
-		    function recurse (cur, prop) {
-		        if (Object(cur) !== cur) {
-		            result[prop] = cur;
-		        } else if (Array.isArray(cur)) {
-		             for(var i=0, l=cur.length; i<l; i++)
-		                 recurse(cur[i], prop + "[" + i + "]");
-		            if (l == 0)
-		                result[prop] = [];
-		        } else {
-		            var isEmpty = true;
-		            for (var p in cur) {
-		                isEmpty = false;
-		                recurse(cur[p], prop ? prop+"."+p : p);
-		            }
-		            if (isEmpty && prop)
-		                result[prop] = {};
-		        }
-		    }
-		    recurse(data, "");
-		    return result;
+		private static foreachRule = (elTemplate, templateData) => {
+			let patternRegex = new RegExp("{{\\s*for .* in .*\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
+			let arrayVarRegex = new RegExp("{{\\s*for .* in (.*)\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
+			let objVarRegex = new RegExp("{{\\s*for (.*) in .*\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
+			let repeatableHtmlRegex = new RegExp("{{\\s*for .* in .*\\s*}}((.|\\n|\\r)*){{\\s*endfor\\s*}}", 'g');
+
+			let foreachMatches = elTemplate.innerHTML.match(patternRegex);
+			for(let m in foreachMatches){
+				let resultHtml = "";
+				let foreachTemplate = foreachMatches[m];
+
+				let arrayVar = foreachTemplate.replace(arrayVarRegex, "$1");
+				let objVar = foreachTemplate.replace(objVarRegex, "$1");
+				let repeatableHtml = foreachTemplate.replace(repeatableHtmlRegex, "$1");
+				for(let i in templateData[arrayVar]){
+					let objVarData = templateData[arrayVar][i];
+					let rowHtml = repeatableHtml;
+					for(let field in templateData[arrayVar][i]){
+						rowHtml = rowHtml.replace(new RegExp("{{\\s*" + objVar + "." + Library.Utils.camelToKebabCase(field) + "\\s*}}", 'g'), templateData[arrayVar][i][field])
+					}
+					resultHtml += rowHtml;
+				}
+
+				elTemplate.innerHTML = elTemplate.innerHTML.replace(foreachTemplate, resultHtml);
+			}
 		}
 	}
 }

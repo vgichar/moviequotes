@@ -1,3 +1,9 @@
 <template name="movie-details-template">
-	{{movie.name}}
+	<div class="container">
+		<h3>{{movie.title}}</h3>
+
+		{{for quote in quotes}}
+			<div>{{quote.text}}</div>
+		{{endfor}}
+	</div>
 </template>

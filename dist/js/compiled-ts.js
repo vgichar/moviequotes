@@ -24,11 +24,11 @@ var Library;
                     document.body.className = document.body.className ? document.body.className.replace("loaded", "") : "";
                     document.body.className += "loading";
                     for (var i in self.onLoadingCallbacks) {
-                        self.onLoadingCallbacks[i]();
+                        self.onLoadingCallbacks[i](route);
                     }
                     Library.Utils.loadFile(view, function (childViewHtml) {
-                        if (entry.beforeLoad) {
-                            entry.beforeLoad(route, args);
+                        if (entry.controller && entry.controller.beforeLoad) {
+                            entry.controller.beforeLoad(route, args);
                         }
                         for (var i in rtViews) {
                             rtViews[i].className = rtViews[i].className ? rtViews[i].className.replace("loading", "") : "";
@@ -38,10 +38,10 @@ var Library;
                         document.body.className = document.body.className ? document.body.className.replace("loading", "") : "";
                         document.body.className += "loaded";
                         for (var i in self.onLoadedCallbacks) {
-                            self.onLoadedCallbacks[i]();
+                            self.onLoadedCallbacks[i](route);
                         }
-                        if (entry.afterLoad) {
-                            entry.afterLoad(route, args);
+                        if (entry.controller && entry.controller.afterLoad) {
+                            entry.controller.afterLoad(route, args);
                         }
                     }, function () {
                         $.get(self.notFoundView).done(function (errorViewHtml) {
@@ -58,11 +58,10 @@ var Library;
             this.back = function () {
                 window.history.back();
             };
-            this.register = function (route, view, beforeLoad, afterLoad) {
-                if (beforeLoad === void 0) { beforeLoad = undefined; }
-                if (afterLoad === void 0) { afterLoad = undefined; }
+            this.register = function (route, view, controller) {
+                if (controller === void 0) { controller = undefined; }
                 route = _this.prepRouteForQuerying(route);
-                _this.routeMap[route] = { view: view, beforeLoad: beforeLoad, afterLoad: afterLoad, route: route };
+                _this.routeMap[route] = { view: view, controller: controller, route: route };
             };
             this.registerNotFound = function (view) {
                 _this.notFoundView = view;
@@ -176,6 +175,7 @@ var Library;
             this.templates = [];
             this.templatesData = [];
             this.prevBlocksCount = 0;
+            this.interpolationRules = [];
             this.bootstrap = function () {
                 _this.setTemplatesDirectory("templates");
             };
@@ -193,13 +193,15 @@ var Library;
                     }
                     self.scanBlocks();
                     self.scanTemplates();
-                    self.setVariablesAsAttributes();
                     self.injectTemplates();
                 });
             };
             this.template = function (name, variables) {
                 var self = _this;
-                self.templatesData[name] = self.flattenJSON(variables);
+                self.templatesData[name] = variables;
+            };
+            this.addInterpolationRule = function (callback) {
+                _this.interpolationRules.push(callback);
             };
             this.scanBlocks = function () {
                 _this.scanByTagName(_this.blocks, "block");
@@ -245,25 +247,17 @@ var Library;
                 }
                 return true;
             };
-            this.setVariablesAsAttributes = function () {
-                for (var i in _this.templatesData) {
-                    var variables = _this.templatesData[i];
-                    var block = _this.blocks[i];
-                    if (block) {
-                        for (var v in variables) {
-                            block.setAttribute(v.replace(".", "-"), variables[v]);
-                        }
-                    }
-                }
-            };
             this.injectTemplates = function () {
                 var self = _this;
                 for (var i in self.blocks) {
                     var name_3 = i;
                     var elBlock = self.blocks[name_3];
                     var elTemplate = self.templates[name_3];
+                    var templateData = self.templatesData[name_3];
                     if (elBlock && elTemplate) {
-                        self.replaceVariables(elBlock, elTemplate);
+                        for (var j in self.interpolationRules) {
+                            self.interpolationRules[j](elTemplate, templateData);
+                        }
                         self.replaceHtml(elBlock, elTemplate);
                     }
                 }
@@ -290,42 +284,51 @@ var Library;
                 elBlock.remove();
                 elTemplate.remove();
             };
-            this.replaceVariables = function (elBlock, elTemplate) {
-                var attrs = elBlock.attributes;
-                for (var i = 0; i < attrs.length; i++) {
-                    elTemplate.innerHTML = elTemplate.innerHTML.replace(new RegExp("{{" + attrs[i].name.replace("-", ".") + "}}", 'g'), attrs[i].value);
-                }
-            };
-            this.flattenJSON = function (data) {
-                var result = {};
-                function recurse(cur, prop) {
-                    if (Object(cur) !== cur) {
-                        result[prop] = cur;
-                    }
-                    else if (Array.isArray(cur)) {
-                        for (var i = 0, l = cur.length; i < l; i++)
-                            recurse(cur[i], prop + "[" + i + "]");
-                        if (l == 0)
-                            result[prop] = [];
-                    }
-                    else {
-                        var isEmpty = true;
-                        for (var p in cur) {
-                            isEmpty = false;
-                            recurse(cur[p], prop ? prop + "." + p : p);
-                        }
-                        if (isEmpty && prop)
-                            result[prop] = {};
-                    }
-                }
-                recurse(data, "");
-                return result;
-            };
             this.bootstrap();
+            DefaultInterpolationRules.init(this);
         }
         return Templater;
     }());
     Library.Templater = Templater;
+    var DefaultInterpolationRules = (function () {
+        function DefaultInterpolationRules() {
+        }
+        DefaultInterpolationRules.init = function (templater) {
+            templater.addInterpolationRule(DefaultInterpolationRules.renderFieldsRule);
+            templater.addInterpolationRule(DefaultInterpolationRules.foreachRule);
+        };
+        DefaultInterpolationRules.renderFieldsRule = function (elTemplate, templateData) {
+            var flatData = Library.Utils.flattenJSON(templateData);
+            for (var field in flatData) {
+                var value = flatData[field];
+                elTemplate.innerHTML = elTemplate.innerHTML.replace(new RegExp("{{\\s*" + Library.Utils.camelToKebabCase(field) + "\\s*}}", 'g'), value);
+            }
+        };
+        DefaultInterpolationRules.foreachRule = function (elTemplate, templateData) {
+            var patternRegex = new RegExp("{{\\s*for .* in .*\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
+            var arrayVarRegex = new RegExp("{{\\s*for .* in (.*)\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
+            var objVarRegex = new RegExp("{{\\s*for (.*) in .*\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
+            var repeatableHtmlRegex = new RegExp("{{\\s*for .* in .*\\s*}}((.|\\n|\\r)*){{\\s*endfor\\s*}}", 'g');
+            var foreachMatches = elTemplate.innerHTML.match(patternRegex);
+            for (var m in foreachMatches) {
+                var resultHtml = "";
+                var foreachTemplate = foreachMatches[m];
+                var arrayVar = foreachTemplate.replace(arrayVarRegex, "$1");
+                var objVar = foreachTemplate.replace(objVarRegex, "$1");
+                var repeatableHtml = foreachTemplate.replace(repeatableHtmlRegex, "$1");
+                for (var i in templateData[arrayVar]) {
+                    var objVarData = templateData[arrayVar][i];
+                    var rowHtml = repeatableHtml;
+                    for (var field in templateData[arrayVar][i]) {
+                        rowHtml = rowHtml.replace(new RegExp("{{\\s*" + objVar + "." + Library.Utils.camelToKebabCase(field) + "\\s*}}", 'g'), templateData[arrayVar][i][field]);
+                    }
+                    resultHtml += rowHtml;
+                }
+                elTemplate.innerHTML = elTemplate.innerHTML.replace(foreachTemplate, resultHtml);
+            }
+        };
+        return DefaultInterpolationRules;
+    }());
 })(Library || (Library = {}));
 /// <reference path="../_references.ts" />
 var Library;
@@ -398,11 +401,15 @@ var Library;
             }
             return result;
         };
-        Utils.today = function () {
+        Utils.today = function (addDays, addMonths, addYears) {
+            if (addDays === void 0) { addDays = 0; }
+            if (addMonths === void 0) { addMonths = 0; }
+            if (addYears === void 0) { addYears = 0; }
             var today = new Date();
-            var dd = today.getDate();
-            var mm = today.getMonth() + 1; //January is 0!
-            var yyyy = today.getFullYear();
+            var desiredDate = new Date(today.getFullYear() + addYears, today.getMonth() + addMonths, today.getDate() + addDays, today.getHours(), today.getMinutes(), today.getSeconds());
+            var dd = desiredDate.getDate();
+            var mm = desiredDate.getMonth() + 1; //January is 0!
+            var yyyy = desiredDate.getFullYear();
             var d = dd.toString();
             var m = mm.toString();
             if (dd < 10) {
@@ -411,7 +418,50 @@ var Library;
             if (mm < 10) {
                 m = '0' + mm;
             }
-            return d + '/' + m + '/' + yyyy;
+            return yyyy + '/' + m + '/' + d;
+        };
+        Utils.now = function (addSeconds, addMinutes, addHours, addDays, addMonths, addYears) {
+            if (addSeconds === void 0) { addSeconds = 0; }
+            if (addMinutes === void 0) { addMinutes = 0; }
+            if (addHours === void 0) { addHours = 0; }
+            if (addDays === void 0) { addDays = 0; }
+            if (addMonths === void 0) { addMonths = 0; }
+            if (addYears === void 0) { addYears = 0; }
+            var today = new Date();
+            var desiredDate = new Date(today.getFullYear() + addYears, today.getMonth() + addMonths, today.getDate() + addDays, today.getHours() + addHours, today.getMinutes() + addMinutes, today.getSeconds() + addSeconds);
+            var ss = desiredDate.getSeconds();
+            var min = desiredDate.getMinutes();
+            var hh = desiredDate.getHours();
+            var dd = desiredDate.getDate();
+            var mm = desiredDate.getMonth() + 1; //January is 0!
+            var yyyy = desiredDate.getFullYear();
+            var d = dd.toString();
+            var m = mm.toString();
+            var h = hh.toString();
+            var mi = min.toString();
+            var s = ss.toString();
+            if (dd < 10) {
+                d = '0' + dd;
+            }
+            if (mm < 10) {
+                m = '0' + mm;
+            }
+            if (dd < 10) {
+                d = '0' + dd;
+            }
+            if (mm < 10) {
+                m = '0' + mm;
+            }
+            if (hh < 10) {
+                h = '0' + hh;
+            }
+            if (min < 10) {
+                mi = '0' + min;
+            }
+            if (ss < 10) {
+                s = '0' + ss;
+            }
+            return yyyy + '/' + m + '/' + d + " " + h + ":" + mi + ":" + s;
         };
         Utils.hashCode = function (str) {
             var hash = 0, i, chr, len;
@@ -424,6 +474,43 @@ var Library;
             }
             return Math.abs(hash);
         };
+        Utils.flattenJSON = function (data) {
+            var result = {};
+            function recurse(cur, prop) {
+                if (Object(cur) !== cur) {
+                    result[prop] = cur;
+                }
+                else if (Array.isArray(cur)) {
+                    for (var i = 0, l = cur.length; i < l; i++)
+                        recurse(cur[i], prop + "[" + i + "]");
+                    if (l == 0)
+                        result[prop] = [];
+                }
+                else {
+                    var isEmpty = true;
+                    for (var p in cur) {
+                        isEmpty = false;
+                        recurse(cur[p], prop ? prop + "." + p : p);
+                    }
+                    if (isEmpty && prop)
+                        result[prop] = {};
+                }
+            }
+            recurse(data, "");
+            return result;
+        };
+        Utils.camelToKebabCase = function (str) {
+            var result = "";
+            for (var i = 0; i < str.length; i++) {
+                if (str[i] >= 'A' && str[i] <= 'Z') {
+                    result += "-" + str[i].toLowerCase();
+                }
+                else {
+                    result += str[i];
+                }
+            }
+            return result;
+        };
         return Utils;
     }());
     Library.Utils = Utils;
@@ -431,19 +518,87 @@ var Library;
 /// <reference path="../_references.ts" />
 var Views;
 (function (Views) {
+    var Index = (function () {
+        function Index() {
+            var _this = this;
+            this.boot = function () {
+                _this.preloadFiles();
+                _this.registerRoutes();
+                _this.setQuoteOfTheDayTempalteData();
+                _this.makeMenuReactive();
+                Index.Router.onLoaded(Index.Templater.work);
+            };
+            this.preloadFiles = function () {
+                Index.Filer.preloadFiles([
+                    "home.html",
+                    "movie-details.html",
+                    "templates/movie-details-template.html",
+                    "templates/quote-of-the-day.html",
+                    "json/movies.json"
+                ]);
+            };
+            this.registerRoutes = function () {
+                Index.Router.defaultConvention(function (route) {
+                    return route.trim("/") + ".html";
+                });
+                Index.Router.registerNotFound("errors/404.html");
+                Index.Router.register("/", "home.html", Views.Home);
+                Index.Router.register("/movie-details/{id}", "movie-details.html", Views.MovieDetails);
+                Index.Router.register("/movies", "movies.html", Views.Movies);
+            };
+            this.setQuoteOfTheDayTempalteData = function () {
+                var quoteOfTheDay = DB.QuotesDB.getQuoteOfTheDay();
+                var movie = DB.MoviesDB.get(quoteOfTheDay.movieId);
+                Views.Index.Templater.template("quote-card-template", {
+                    "movie": {
+                        "id": quoteOfTheDay.movieId,
+                        "name": movie.title,
+                        "cover-photo": movie.coverPhoto
+                    },
+                    "quote": {
+                        "text": quoteOfTheDay.text,
+                        "likes": parseInt((Math.random() * 100000).toString())
+                    }
+                });
+            };
+            this.makeMenuReactive = function () {
+                Index.Router.onLoading(function (route) {
+                    $("nav a").removeClass("active");
+                    $("nav a[href*='" + route + "']").addClass("active");
+                });
+            };
+        }
+        Index.Templater = new Library.Templater();
+        Index.Router = new Library.Router();
+        Index.Filer = Library.Filer.Current();
+        return Index;
+    }());
+    Views.Index = Index;
+})(Views || (Views = {}));
+/// <reference path="../_references.ts" />
+var Views;
+(function (Views) {
     var Home = (function () {
         function Home() {
         }
-        Home.onBeforeLoad = function (route, args) {
-            var movies = DB.MoviesDB.getMovieOfTheDay();
-            console.log(movies);
-            Views.Index.Templater.template("quote-of-the-day", {
-                "movie.id": 45,
-                "movie.name": "Fight club",
-                "movie.year": 1999,
-                "quote.text": "First",
-                "quote.when": "150"
-            });
+        Home.beforeLoad = function (route, args) {
+            var count = 3;
+            var prev = [];
+            var templateData = { movies: [] };
+            for (var i = 1; i <= count; i++) {
+                var quote = DB.QuotesDB.getRandomQuote(prev);
+                if (quote) {
+                    var movie = DB.MoviesDB.get(quote.movieId);
+                    templateData["movies"].push({
+                        "movie-id": movie.id,
+                        "movie-title": movie.title,
+                        "movie-cover-photo": movie.coverPhoto,
+                        "quote-text": quote.text
+                    });
+                    prev.push(quote.id);
+                }
+            }
+            Views.Index.Templater.template("quotes-template", templateData);
         };
         return Home;
     }());
@@ -452,35 +607,35 @@ var Views;
 /// <reference path="../_references.ts" />
 var Views;
 (function (Views) {
-    var Index = (function () {
-        function Index() {
-            this.boot = function () {
-                Index.Templater = new Library.Templater();
-                Index.Router = new Library.Router();
-                Index.Filer = Library.Filer.Current();
-                Index.Filer.preloadFiles([
-                    "home.html",
-                    "movie-details.html",
-                    "templates/movie-details-template.html",
-                    "templates/quote-of-the-day.html",
-                    "json/movies.json"
-                ]);
-                Index.Router.register("/", "home.html", Views.Home.onBeforeLoad);
-                Index.Router.register("/movie-details/{id}", "movie-details.html", function (route, args) {
-                    Views.Index.Templater.template("movie-details-template", {
-                        "movie.name": "Fight club"
-                    });
-                });
-                Index.Router.registerNotFound("errors/404.html");
-                Index.Router.defaultConvention(function (route) {
-                    return route.trim("/") + ".html";
-                });
-                Index.Router.onLoaded(Index.Templater.work);
-            };
+    var Movies = (function () {
+        function Movies() {
         }
-        return Index;
+        Movies.beforeLoad = function (route, args) {
+            Views.Index.Templater.template("movies-template", {
+                "movies": DB.MoviesDB.all()
+            });
+        };
+        return Movies;
     }());
-    Views.Index = Index;
+    Views.Movies = Movies;
+})(Views || (Views = {}));
+/// <reference path="../_references.ts" />
+var Views;
+(function (Views) {
+    var MovieDetails = (function () {
+        function MovieDetails() {
+        }
+        MovieDetails.beforeLoad = function (route, args) {
+            var movie = DB.MoviesDB.get(args.id);
+            var quotes = DB.QuotesDB.getByMovie(args.id);
+            Views.Index.Templater.template("movie-details-template", {
+                "movie": movie,
+                "quotes": quotes
+            });
+        };
+        return MovieDetails;
+    }());
+    Views.MovieDetails = MovieDetails;
 })(Views || (Views = {}));
 /// <reference path="../_references.ts" />
 var DB;
@@ -501,30 +656,30 @@ var DB;
         };
         MoviesDB.get = function (id) {
             id = parseInt(id.toString());
-            return MoviesDB.all()[id];
+            return Enumerable.From(MoviesDB.all()).Single(function (x) { return x.id == id; });
         };
         MoviesDB.getMovieOfTheDay = function () {
             var movies = MoviesDB.all();
-            var previous = LocalStorageMovies.getPreviousMoviesOfTheDay();
-            var current = LocalStorageMovies.getCurrentMovieOfTheDay();
+            var previous = LocalStorageMovies.getPreviousMovies();
+            var current = LocalStorageMovies.getCurrentMovie();
             if (!current) {
-                var hash = Library.Utils.hashCode(Library.Utils.today()) % movies.length;
-                LocalStorageMovies.setCurrentMovieOfTheDay(hash);
+                var hash = Library.Utils.hashCode(Library.Utils.now()) % movies.length;
+                LocalStorageMovies.setCurrentMovie(hash, Library.Utils.today(), Library.Utils.today(1));
                 return MoviesDB.get(hash);
             }
-            if (current.date == Library.Utils.today()) {
+            if (current.dateFrom <= Library.Utils.now() && current.dateTo >= Library.Utils.now()) {
                 return MoviesDB.get(current.id);
             }
             else {
-                LocalStorageMovies.addPreviousMovieOfTheDay(current.id, current.date);
+                LocalStorageMovies.addPreviousMovie(current.id, current.dateFrom, current.dateTo);
                 if (previous.length == movies.length) {
-                    LocalStorageMovies.resetPreviousMoviesOfTheDay();
+                    LocalStorageMovies.resetPreviousMovies();
                 }
                 var prevIds = Enumerable.From(previous).Select(function (x) { return x.id; });
                 var movieIds = Library.Utils.initArrayOrdered(movies.length);
                 var notSeen = Enumerable.From(movieIds).Except(prevIds).ToArray();
-                var hash = Library.Utils.hashCode(Library.Utils.today()) % notSeen.length;
-                LocalStorageMovies.setCurrentMovieOfTheDay(hash);
+                var hash = Library.Utils.hashCode(Library.Utils.now()) % notSeen.length;
+                LocalStorageMovies.setCurrentMovie(hash, Library.Utils.today(), Library.Utils.today(1));
                 return MoviesDB.get(hash);
             }
         };
@@ -534,30 +689,30 @@ var DB;
     var LocalStorageMovies = (function () {
         function LocalStorageMovies() {
         }
-        LocalStorageMovies.getPreviousMoviesOfTheDay = function () {
-            var moviesJson = localStorage["previousMoviesOfTheDay"];
+        LocalStorageMovies.getPreviousMovies = function () {
+            var moviesJson = localStorage["previousMovies"];
             var movies = [];
             if (moviesJson) {
                 movies = JSON.parse(moviesJson);
             }
             return movies;
         };
-        LocalStorageMovies.addPreviousMovieOfTheDay = function (id, date) {
-            var movies = LocalStorageMovies.getPreviousMoviesOfTheDay();
+        LocalStorageMovies.addPreviousMovie = function (id, dateFrom, dateTo) {
+            var movies = LocalStorageMovies.getPreviousMovies();
             id = parseInt(id.toString());
-            movies.push({ id: id, date: date });
-            localStorage["previousMoviesOfTheDay"] = JSON.stringify(movies);
+            movies.push({ id: id, dateFrom: dateFrom, dateTo: dateTo });
+            localStorage["previousMovies"] = JSON.stringify(movies);
         };
-        LocalStorageMovies.resetPreviousMoviesOfTheDay = function () {
-            localStorage["previousMoviesOfTheDay"] = JSON.stringify([]);
+        LocalStorageMovies.resetPreviousMovies = function () {
+            localStorage["previousMovies"] = JSON.stringify([]);
         };
-        LocalStorageMovies.getCurrentMovieOfTheDay = function () {
-            var movie = localStorage["currentMovieOfTheDay"];
+        LocalStorageMovies.getCurrentMovie = function () {
+            var movie = localStorage["currentMovie"];
             return movie ? JSON.parse(movie) : undefined;
         };
-        LocalStorageMovies.setCurrentMovieOfTheDay = function (id) {
+        LocalStorageMovies.setCurrentMovie = function (id, dateFrom, dateTo) {
             id = parseInt(id.toString());
-            localStorage["currentMovieOfTheDay"] = JSON.stringify({ id: id, date: Library.Utils.today() });
+            localStorage["currentMovie"] = JSON.stringify({ id: id, dateFrom: dateFrom, dateTo: dateTo });
         };
         return LocalStorageMovies;
     }());
@@ -570,31 +725,89 @@ var DB;
         }
         return Quote;
     }());
-    var QoutesDB = (function () {
-        function QoutesDB() {
-            this.all = function () {
-            };
-            this.take = function (offset, take) {
-            };
-            this.get = function (id) {
-            };
-            this.getByMovie = function (movieId) {
-            };
-            this.getQuoteOfTheDay = function () {
-            };
+    var QuotesDB = (function () {
+        function QuotesDB() {
         }
-        return QoutesDB;
+        QuotesDB.all = function () {
+            return Library.Filer.Current().getFile("json/quotes.json");
+        };
+        QuotesDB.take = function (offset, take) {
+            return QuotesDB.all().slice(offset, offset + take);
+        };
+        QuotesDB.get = function (id) {
+            id = parseInt(id.toString());
+            return Enumerable.From(QuotesDB.all()).Single(function (x) { return x.id == id; });
+        };
+        QuotesDB.getByMovie = function (movieId) {
+            movieId = parseInt(movieId.toString());
+            return Enumerable.From(QuotesDB.all()).Where(function (x) { return x.movieId == movieId; }).ToArray();
+        };
+        QuotesDB.getQuoteOfTheDay = function () {
+            var quotes = QuotesDB.all();
+            var previous = LocalStorageQuotes.getPreviousQuotes();
+            var current = LocalStorageQuotes.getCurrentQuote();
+            if (!current) {
+                var hash = Library.Utils.hashCode(Library.Utils.now()) % quotes.length;
+                LocalStorageQuotes.setCurrentQuote(hash, Library.Utils.today(), Library.Utils.today(1));
+                return QuotesDB.get(hash);
+            }
+            if (current.dateFrom <= Library.Utils.now() && current.dateTo >= Library.Utils.now()) {
+                return QuotesDB.get(current.id);
+            }
+            else {
+                LocalStorageQuotes.addPreviousQuote(current.id, current.dateFrom, current.dateTo);
+                if (previous.length == quotes.length) {
+                    LocalStorageQuotes.resetPreviousQuotes();
+                }
+                var prevIds = Enumerable.From(previous).Select(function (x) { return x.id; });
+                var quoteIds = Library.Utils.initArrayOrdered(quotes.length);
+                var notSeen = Enumerable.From(quoteIds).Except(prevIds).ToArray();
+                var hash = Library.Utils.hashCode(Library.Utils.now()) % notSeen.length;
+                LocalStorageQuotes.setCurrentQuote(hash, Library.Utils.today(), Library.Utils.today(1));
+                return QuotesDB.get(notSeen[hash]);
+            }
+        };
+        QuotesDB.getRandomQuote = function (notIn) {
+            if (notIn === void 0) { notIn = []; }
+            var quotes = QuotesDB.all();
+            var quoteIds = Library.Utils.initArrayOrdered(quotes.length);
+            var notSeen = Enumerable.From(quoteIds).Except(notIn).ToArray();
+            if (notSeen.length == 0)
+                return undefined;
+            var hash = Library.Utils.hashCode(Library.Utils.now()) % notSeen.length;
+            return QuotesDB.get(notSeen[hash]);
+        };
+        return QuotesDB;
     }());
-    DB.QoutesDB = QoutesDB;
+    DB.QuotesDB = QuotesDB;
     var LocalStorageQuotes = (function () {
         function LocalStorageQuotes() {
-            this.getPreviousQuotesOfTheDay = function () {
-            };
-            this.getCurrentQuoteOfTheDay = function () {
-            };
-            this.setCurrentQuoteOfTheDay = function (quote) {
-            };
         }
+        LocalStorageQuotes.getPreviousQuotes = function () {
+            var quotesJson = localStorage["previousQuotes"];
+            var quotes = [];
+            if (quotesJson) {
+                quotes = JSON.parse(quotesJson);
+            }
+            return quotes;
+        };
+        LocalStorageQuotes.addPreviousQuote = function (id, dateFrom, dateTo) {
+            var quotes = LocalStorageQuotes.getPreviousQuotes();
+            id = parseInt(id.toString());
+            quotes.push({ id: id, dateFrom: dateFrom, dateTo: dateTo });
+            localStorage["previousQuotes"] = JSON.stringify(quotes);
+        };
+        LocalStorageQuotes.resetPreviousQuotes = function () {
+            localStorage["previousQuotes"] = JSON.stringify([]);
+        };
+        LocalStorageQuotes.getCurrentQuote = function () {
+            var quote = localStorage["currentQuote"];
+            return quote ? JSON.parse(quote) : undefined;
+        };
+        LocalStorageQuotes.setCurrentQuote = function (id, dateFrom, dateTo) {
+            id = parseInt(id.toString());
+            localStorage["currentQuote"] = JSON.stringify({ id: id, dateFrom: dateFrom, dateTo: dateTo });
+        };
         return LocalStorageQuotes;
     }());
 })(DB || (DB = {}));
@@ -603,7 +816,9 @@ var DB;
 /// <reference path="libs/templater.ts" />
 /// <reference path="libs/filer.ts" />
 /// <reference path="libs/utils.ts" />
-/// <reference path="views/home.ts" />
 /// <reference path="views/index.ts" />
+/// <reference path="views/home.ts" />
+/// <reference path="views/movies.ts" />
+/// <reference path="views/movie-details.ts" />
 /// <reference path="db/movies.ts" />
 /// <reference path="db/quotes.ts" /> 

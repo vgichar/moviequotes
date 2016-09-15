@@ -11,7 +11,11 @@ h1, h2, h3, h4, h5, h6 {
   font-family: $baseHeaderFontFamily;
 }
 
-a, a:hover{
+a, a:hover, a:active, a:focus, a:visited{
 	color: $clText;
 	text-decoration: none;
+}
+
+.content{
+	padding-top: 50px;
 }

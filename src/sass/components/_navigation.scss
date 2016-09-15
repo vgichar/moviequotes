@@ -1,0 +1,23 @@
+nav{
+	background: #eee;
+
+	.menu-item:not(.logo){
+		display: table-cell;
+		padding-left: 20px;
+		padding-right: 20px;
+
+		&:hover, &.active{
+			background: #f6f6f6;
+		}
+	}
+
+	.menu-item.logo{
+		display: table-cell;
+		padding: 10px;
+
+		img {
+			width: 30px;
+			height: auto;
+		}
+	}
+}
