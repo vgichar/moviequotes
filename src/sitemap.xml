@@ -2,12 +2,29 @@
 <urlset
       xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<url>
-  <loc>http://moviequotes.netlify.com/</loc>
-  <loc>http://moviequotes.netlify.com/#!/</loc>
-  <loc>http://moviequotes.netlify.com/#!/movies</loc>
-  <loc>http://moviequotes.netlify.com/#!/movie-details/0</loc>
-</url>
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+	<url>
+	  	<loc>http://moviequotes.netlify.com/</loc>
+		<lastmod>2016-09-17</lastmod>
+		<changefreq>daily</changefreq>
+		<priority>1</priority>
+	</url>
+	<url>
+	  	<loc>http://moviequotes.netlify.com/#!/</loc>
+		<lastmod>2016-09-17</lastmod>
+		<changefreq>daily</changefreq>
+		<priority>1</priority>
+	</url>
+	<url>
+	  	<loc>http://moviequotes.netlify.com/#!/movies</loc>
+		<lastmod>2016-09-17</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>1</priority>
+	</url>
+	<url>
+	  	<loc>http://moviequotes.netlify.com/#!/movie-details/0</loc>
+		<lastmod>2016-09-17</lastmod>
+		<changefreq>monthly</changefreq>
+		<priority>1</priority>
+	</url>
 </urlset>
