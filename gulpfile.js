@@ -45,10 +45,9 @@ gulp.task("watch", ["build"], function(){
     gulp.watch('src/images/**', ['copy-images']);
     gulp.watch('src/json/**/*.json', ['copy-json']);
     gulp.watch('src/**/*.js', ['copy-js']);
-    gulp.watch('src/favicon.ico', ['copy-favicon']);
 });
 
-gulp.task("build", ["build-sass", "build-typescript", "copy-views", "copy-images", "copy-json", "copy-favicon", "copy-vendor", "copy-js"]);
+gulp.task("build", ["build-sass", "build-typescript", "copy-views", "copy-images", "copy-json", "copy-static", "copy-vendor", "copy-js"]);
 
 gulp.task("build-sass", function(){ 
     gulp.src('src/sass/style.scss')
@@ -84,8 +83,12 @@ gulp.task("copy-json", function(){
         .pipe(gulp.dest('dist/json'))
 });
 
-gulp.task("copy-favicon", function(){
+gulp.task("copy-static", function(){
     gulp.src('src/favicon.ico')
+        .pipe(gulp.dest('dist'))
+    gulp.src('src/robots.txt')
+        .pipe(gulp.dest('dist'))
+    gulp.src('src/sitemap.xml')
         .pipe(gulp.dest('dist'))
 });
 
