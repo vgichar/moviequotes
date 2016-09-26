@@ -26,7 +26,6 @@ module Library{
 		public work = () => {
 			let self = this;
 			self.scanBlocks();
-			self.scanTemplates();
 
 			let hadAny = self.preloadTemplates(function(){
 				if(hadAny){
@@ -34,7 +33,6 @@ module Library{
 					return;
 				}
 				self.scanBlocks();
-				self.scanTemplates();
 
 				self.injectTemplates();
 			})
@@ -53,10 +51,6 @@ module Library{
 			this.scanByTagName(this.blocks, "block");
 		}
 
-		private scanTemplates = () =>{
-			this.scanByTagName(this.templates, "template");
-		}
-
 		private scanByTagName = (container, tagName) => {
 
 			for(let i in container){
@@ -73,25 +67,24 @@ module Library{
 		}
 
 		private preloadTemplates = (onLoadAll) =>{
+			let self = this;
 			let countLoaded = 0;
 			let shouldLoad = 0;
 			for(let name in this.blocks){
-				let templateExists = this.templates[name] != undefined;
-				if(!templateExists){
-					shouldLoad++;
-					let path = "templates/" + name + ".html";
-					Library.Utils.loadFile(path, function(data){
-						let elTemplateParent = document.createElement("div");
-						elTemplateParent.innerHTML = data;
-						let elTemplate = elTemplateParent.firstChild;
-						document.body.appendChild(elTemplate);
+				shouldLoad++;
+				let path = "templates/" + name + ".html";
+				Library.Utils.loadFile(path, function(data){
+					let elTemplateParent = document.createElement("div");
+					elTemplateParent.innerHTML = data;
+					let elTemplate = elTemplateParent.firstChild;
+					document.body.appendChild(elTemplate);
+					self.templates[name] = elTemplate;
 
-						countLoaded++;
-						if(shouldLoad == countLoaded){
-							onLoadAll();
-						}
-					}, undefined);
-				}
+					countLoaded++;
+					if(shouldLoad == countLoaded){
+						onLoadAll();
+					}
+				}, undefined);
 			}
 
 			if(shouldLoad == 0){
@@ -178,19 +171,16 @@ module Library{
 		}
 
 		private static foreachRule = (html, templateData) => {
-			let patternRegex = new RegExp("{{\\s*for .* in .*\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
-			let arrayVarRegex = new RegExp("{{\\s*for .* in (.*)\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
-			let objVarRegex = new RegExp("{{\\s*for (.*) in .*\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
-			let repeatableHtmlRegex = new RegExp("{{\\s*for .* in .*\\s*}}((.|\\n|\\r)*){{\\s*endfor\\s*}}", 'g');
+			let regex = new RegExp("{{\\s*for (.*) in (.*)\\s*}}((.|\\n|\\r)*){{\\s*endfor\\s*}}", 'g');
 
-			let foreachMatches = html.match(patternRegex);
+			let foreachMatches = html.match(regex);
 			for(let m in foreachMatches){
 				let resultHtml = "";
 				let foreachTemplate = foreachMatches[m];
 
-				let arrayVar = foreachTemplate.replace(arrayVarRegex, "$1"); // example movie.quotes
-				let objVar = foreachTemplate.replace(objVarRegex, "$1"); // example quote // scope temp
-				let repeatableHtml = foreachTemplate.replace(repeatableHtmlRegex, "$1"); // example {{quote.text}}
+				let objVar = foreachTemplate.replace(regex, "$1"); // example quote // scope temp
+				let arrayVar = foreachTemplate.replace(regex, "$2"); // example movie.quotes
+				let repeatableHtml = foreachTemplate.replace(regex, "$3"); // example {{quote.text}}
 
 				let scope = new Scope(templateData);
 
@@ -241,6 +231,8 @@ module Library{
 					html = html.replace(match, blocks[0]);
 				}else if(blocks.length == 2){
 					html = html.replace(match, blocks[1]);
+				}else{
+					html = html.replace(match, "");
 				}
 
 				scope.makeLocal();
@@ -251,7 +243,6 @@ module Library{
 
 		private static renderAnythingRule = (html, templateData) => {
 			let regex = new RegExp("{{(.*)}}", 'g');
-			let codeRegex = new RegExp("{{(.*)}}", 'g');
 			let matches = html.match(regex);
 
 			let scope = new Scope(templateData);
@@ -259,11 +250,11 @@ module Library{
 
 			for(let m in matches){
 				let match = matches[m];
-				let code = match.replace(codeRegex, "$1");
+				let code = match.replace(regex, "$1");
 
 				html = html.replace(match, eval(code));
 			}
-
+			
 			scope.makeLocal()
 
 			return html;

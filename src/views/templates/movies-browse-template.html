@@ -1,0 +1,10 @@
+<template>
+	<a href="#!/movies">
+		All
+	</a>
+	{{for letter in letters}}
+		<a href="#!/movies/{{String.fromCharCode(letter).toLowerCase()}}">
+			{{String.fromCharCode(letter)}}
+		</a>
+	{{endfor}}
+</template>

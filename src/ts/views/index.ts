@@ -21,9 +21,10 @@ module Views{
 				"movies.html",
 				"movie-details.html",
 				"templates/movie-details-template.html",
-				"templates/quote-card-template.html",
-				"templates/popular-movies-template.html",
+				"templates/movies-browse-template.html",
 				"templates/movies-template.html",
+				"templates/popular-movies-template.html",
+				"templates/quote-card-template.html",
 				"json/movies.json",
 				"json/popular-movies.json"
 			]);
@@ -38,6 +39,7 @@ module Views{
 			Index.Router.register("/", "home.html", Views.Home);
 			Index.Router.register("/movie-details/{id}", "movie-details.html", Views.MovieDetails);
 			Index.Router.register("/movies", "movies.html", Views.Movies);
+			Index.Router.register("/movies/{start}", "movies.html", Views.Movies);
 		}
 
 		private setQuoteOfTheDayTempalteData = () => {

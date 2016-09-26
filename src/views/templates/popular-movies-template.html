@@ -1,18 +1,20 @@
-<template name="popular-movies-template">
+<template>
 	<div class="popular-movies">
 		<h3>Popular movies</h3>
 		{{for movie in movies}}
-			<a href="#!/movie-details/{{movie.slug}}" class="well row">
-				<div class="col-sm-2">
+			<a href="#!/movie-details/{{movie.slug}}" class="well row movie-row">
+				<div class="col-lg-2 col-sm-3">
 					<img src="{{movie.smallCoverPhoto}}" />
 				</div>
-				<div class="col-sm-10">
-					<strong>{{movie.title}}</strong>
-					<div>
+				<div class="col-lg-10 col-sm-9">
+					<h3>{{movie.title}}</h3>
+					<p>
 						{{for line in movie.quote.lines}}
-							<p>{{line.text}}</p>
+							<strong>{{line.character != undefined ? line.character + ": " : ""}}</strong>
+							<span>{{line.text}}</span>
+							<br>
 						{{endfor}}
-					</div>
+					</p>
 					<div class="social">
 						<span>Like</span>
 						<span>Share</span>

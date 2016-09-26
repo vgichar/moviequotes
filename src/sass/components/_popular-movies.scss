@@ -1,6 +1,5 @@
 .popular-movies{
-	margin: 0 50px;
-	> a {
+	> a.movie-row {
 		display: block;
 		border: 0;
 		border-bottom: 1px solid #ccc;
@@ -8,6 +7,15 @@
 		background: white;
 		box-shadow: none !important;
 		-webkit-box-shadow: none !important;
+
+		margin-bottom: 0;
+		padding-top: 40px;
+
+		transition: background-color .25s ease-in-out;
+
+		&:hover{
+			background-color: $clBrandLight;
+		}
 
 		img{
 			width: auto; 

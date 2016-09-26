@@ -1,15 +1,15 @@
 html, body {
   font-size: 16px;
-  color: #303030; }
+  color: #444; }
 
 body {
-  font-family: "Open Sans"; }
+  font-family: "PT Sans", sans-serif; }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Roboto"; }
+  font-family: "PT Sans Narrow", sans-serif; }
 
 a, a:hover, a:active, a:focus, a:visited {
-  color: #303030;
+  color: #444;
   text-decoration: none; }
 
 .content {
@@ -17,7 +17,7 @@ a, a:hover, a:active, a:focus, a:visited {
 
 .loading-bar {
   position: absolute;
-  background: #0769ad;
+  background: #1d1d1d;
   -webkit-animation-name: load;
           animation-name: load;
   -webkit-animation-duration: 1.4s;
@@ -105,33 +105,22 @@ a, a:hover, a:active, a:focus, a:visited {
   100% {
     height: 0; } }
 
-.movies {
-  margin: 0 50px; }
-  .movies > a {
-    display: block;
-    border: 0;
-    border-bottom: 1px solid #ccc;
-    border-radius: 0;
-    background: white;
-    box-shadow: none !important;
-    -webkit-box-shadow: none !important; }
-    .movies > a img {
-      width: 100%; }
-    .movies > a p {
-      margin-top: 20px; }
-    .movies > a .social {
-      float: right; }
-      .movies > a .social span {
-        font-size: small; }
+.movies a {
+  text-decoration: underline; }
 
 nav {
-  background: #eee; }
+  background: #171717; }
   nav .menu-item:not(.logo) {
     display: table-cell;
     padding-left: 20px;
-    padding-right: 20px; }
+    padding-right: 20px;
+    font-weight: bold;
+    color: #919191;
+    transition: color .25s ease-in-out;
+    -moz-transition: color .25s ease-in-out;
+    -webkit-transition: color .25s ease-in-out; }
     nav .menu-item:not(.logo):hover, nav .menu-item:not(.logo).active {
-      background: #f6f6f6; }
+      color: white; }
   nav .menu-item.logo {
     display: table-cell;
     padding: 10px; }
@@ -139,24 +128,28 @@ nav {
       width: 30px;
       height: auto; }
 
-.popular-movies {
-  margin: 0 50px; }
-  .popular-movies > a {
-    display: block;
-    border: 0;
-    border-bottom: 1px solid #ccc;
-    border-radius: 0;
-    background: white;
-    box-shadow: none !important;
-    -webkit-box-shadow: none !important; }
-    .popular-movies > a img {
-      width: auto; }
-    .popular-movies > a p {
-      margin-top: 20px; }
-    .popular-movies > a .social {
-      float: right; }
-      .popular-movies > a .social span {
-        font-size: small; }
+.popular-movies > a.movie-row {
+  display: block;
+  border: 0;
+  border-bottom: 1px solid #ccc;
+  border-radius: 0;
+  background: white;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  margin-bottom: 0;
+  padding-top: 40px;
+  -webkit-transition: background-color .25s ease-in-out;
+  transition: background-color .25s ease-in-out; }
+  .popular-movies > a.movie-row:hover {
+    background-color: #ececec; }
+  .popular-movies > a.movie-row img {
+    width: auto; }
+  .popular-movies > a.movie-row p {
+    margin-top: 20px; }
+  .popular-movies > a.movie-row .social {
+    float: right; }
+    .popular-movies > a.movie-row .social span {
+      font-size: small; }
 
 .quote-card {
   margin: 50px; }

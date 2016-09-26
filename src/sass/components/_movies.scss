@@ -1,28 +1,5 @@
 .movies{
-	margin: 0 50px;
-	> a {
-		display: block;
-		border: 0;
-		border-bottom: 1px solid #ccc;
-		border-radius: 0;
-		background: white;
-		box-shadow: none !important;
-		-webkit-box-shadow: none !important;
-
-		img{
-			width: 100%; 
-		}
-
-		p{
-			margin-top: 20px;
-		}
-
-		.social{
-			float: right;
-			
-			span{
-				font-size: small;
-			}
-		}
+	a{
+		text-decoration: underline;
 	}
 }

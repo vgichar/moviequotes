@@ -36,6 +36,11 @@ module DB{
 			return Enumerable.From(movies).Select(x => new Movie(x.id, x.title, x.year, x.img));
 		}
 
+		public static getByStart = (str: string): any => {
+			str = str.toLowerCase();
+			return MoviesDB.all().Where(x => x.title.toLowerCase().indexOf(str) == 0);
+		}
+
 		public static take = (offset, take): Movie[] => {
 			return MoviesDB.all().slice(offset, offset + take);
 		}

@@ -1,13 +1,19 @@
 nav{
-	background: #eee;
+	background: $clBrand;
 
 	.menu-item:not(.logo){
 		display: table-cell;
 		padding-left: 20px;
 		padding-right: 20px;
+		font-weight: bold;
+		color: $clTextLight;
+
+	    transition: color .25s ease-in-out;
+	    -moz-transition: color .25s ease-in-out;
+	    -webkit-transition: color .25s ease-in-out;
 
 		&:hover, &.active{
-			background: #f6f6f6;
+			color: white;
 		}
 	}
 

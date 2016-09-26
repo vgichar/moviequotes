@@ -185,14 +185,12 @@ var Library;
             this.work = function () {
                 var self = _this;
                 self.scanBlocks();
-                self.scanTemplates();
                 var hadAny = self.preloadTemplates(function () {
                     if (hadAny) {
                         self.work();
                         return;
                     }
                     self.scanBlocks();
-                    self.scanTemplates();
                     self.injectTemplates();
                 });
             };
@@ -205,9 +203,6 @@ var Library;
             };
             this.scanBlocks = function () {
                 _this.scanByTagName(_this.blocks, "block");
-            };
-            this.scanTemplates = function () {
-                _this.scanByTagName(_this.templates, "template");
             };
             this.scanByTagName = function (container, tagName) {
                 for (var i in container) {
@@ -222,24 +217,26 @@ var Library;
                 }
             };
             this.preloadTemplates = function (onLoadAll) {
+                var self = _this;
                 var countLoaded = 0;
                 var shouldLoad = 0;
+                var _loop_1 = function(name_2) {
+                    shouldLoad++;
+                    var path = "templates/" + name_2 + ".html";
+                    Library.Utils.loadFile(path, function (data) {
+                        var elTemplateParent = document.createElement("div");
+                        elTemplateParent.innerHTML = data;
+                        var elTemplate = elTemplateParent.firstChild;
+                        document.body.appendChild(elTemplate);
+                        self.templates[name_2] = elTemplate;
+                        countLoaded++;
+                        if (shouldLoad == countLoaded) {
+                            onLoadAll();
+                        }
+                    }, undefined);
+                };
                 for (var name_2 in _this.blocks) {
-                    var templateExists = _this.templates[name_2] != undefined;
-                    if (!templateExists) {
-                        shouldLoad++;
-                        var path = "templates/" + name_2 + ".html";
-                        Library.Utils.loadFile(path, function (data) {
-                            var elTemplateParent = document.createElement("div");
-                            elTemplateParent.innerHTML = data;
-                            var elTemplate = elTemplateParent.firstChild;
-                            document.body.appendChild(elTemplate);
-                            countLoaded++;
-                            if (shouldLoad == countLoaded) {
-                                onLoadAll();
-                            }
-                        }, undefined);
-                    }
+                    _loop_1(name_2);
                 }
                 if (shouldLoad == 0) {
                     onLoadAll();
@@ -314,17 +311,14 @@ var Library;
             return html;
         };
         DefaultInterpolationRules.foreachRule = function (html, templateData) {
-            var patternRegex = new RegExp("{{\\s*for .* in .*\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
-            var arrayVarRegex = new RegExp("{{\\s*for .* in (.*)\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
-            var objVarRegex = new RegExp("{{\\s*for (.*) in .*\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
-            var repeatableHtmlRegex = new RegExp("{{\\s*for .* in .*\\s*}}((.|\\n|\\r)*){{\\s*endfor\\s*}}", 'g');
-            var foreachMatches = html.match(patternRegex);
+            var regex = new RegExp("{{\\s*for (.*) in (.*)\\s*}}((.|\\n|\\r)*){{\\s*endfor\\s*}}", 'g');
+            var foreachMatches = html.match(regex);
             for (var m in foreachMatches) {
                 var resultHtml = "";
                 var foreachTemplate = foreachMatches[m];
-                var arrayVar = foreachTemplate.replace(arrayVarRegex, "$1"); // example movie.quotes
-                var objVar = foreachTemplate.replace(objVarRegex, "$1"); // example quote // scope temp
-                var repeatableHtml = foreachTemplate.replace(repeatableHtmlRegex, "$1"); // example {{quote.text}}
+                var objVar = foreachTemplate.replace(regex, "$1"); // example quote // scope temp
+                var arrayVar = foreachTemplate.replace(regex, "$2"); // example movie.quotes
+                var repeatableHtml = foreachTemplate.replace(regex, "$3"); // example {{quote.text}}
                 var scope = new Scope(templateData);
                 var arr = scope.getValue(arrayVar);
                 var counter = 0;
@@ -364,19 +358,21 @@ var Library;
                 else if (blocks.length == 2) {
                     html = html.replace(match, blocks[1]);
                 }
+                else {
+                    html = html.replace(match, "");
+                }
                 scope.makeLocal();
             }
             return html;
         };
         DefaultInterpolationRules.renderAnythingRule = function (html, templateData) {
             var regex = new RegExp("{{(.*)}}", 'g');
-            var codeRegex = new RegExp("{{(.*)}}", 'g');
             var matches = html.match(regex);
             var scope = new Scope(templateData);
             scope.makeGlobal();
             for (var m in matches) {
                 var match = matches[m];
-                var code = match.replace(codeRegex, "$1");
+                var code = match.replace(regex, "$1");
                 html = html.replace(match, eval(code));
             }
             scope.makeLocal();
@@ -446,13 +442,13 @@ var Library;
             this.cache = {};
             this.preloadFiles = function (files) {
                 var self = _this;
-                var _loop_1 = function(i) {
+                var _loop_2 = function(i) {
                     $.get(files[i]).done(function (data) {
                         self.cache[files[i]] = data;
                     });
                 };
                 for (var i in files) {
-                    _loop_1(i);
+                    _loop_2(i);
                 }
             };
             this.getFile = function (fileName) {
@@ -501,10 +497,11 @@ var Library;
             }
             return result;
         };
-        Utils.initArrayOrdered = function (size) {
+        Utils.initArrayOrdered = function (size, startChar) {
+            if (startChar === void 0) { startChar = 0; }
             var result = [];
             for (var i = 0; i < size; i++) {
-                result.push(i);
+                result.push(startChar + i);
             }
             return result;
         };
@@ -646,9 +643,10 @@ var Views;
                     "movies.html",
                     "movie-details.html",
                     "templates/movie-details-template.html",
-                    "templates/quote-card-template.html",
-                    "templates/popular-movies-template.html",
+                    "templates/movies-browse-template.html",
                     "templates/movies-template.html",
+                    "templates/popular-movies-template.html",
+                    "templates/quote-card-template.html",
                     "json/movies.json",
                     "json/popular-movies.json"
                 ]);
@@ -661,6 +659,7 @@ var Views;
                 Index.Router.register("/", "home.html", Views.Home);
                 Index.Router.register("/movie-details/{id}", "movie-details.html", Views.MovieDetails);
                 Index.Router.register("/movies", "movies.html", Views.Movies);
+                Index.Router.register("/movies/{start}", "movies.html", Views.Movies);
             };
             this.setQuoteOfTheDayTempalteData = function () {
                 var quoteOfTheDay = DB.QuotesDB.getQuoteOfTheDay();
@@ -717,8 +716,19 @@ var Views;
         function Movies() {
         }
         Movies.beforeLoad = function (route, args) {
-            Views.Index.Templater.template("movies-template", {
-                "movies": DB.MoviesDB.all().ToArray()
+            var start = args.start;
+            if (start) {
+                Views.Index.Templater.template("movies-template", {
+                    "movies": DB.MoviesDB.getByStart(start).ToArray()
+                });
+            }
+            else {
+                Views.Index.Templater.template("movies-template", {
+                    "movies": DB.MoviesDB.all().ToArray()
+                });
+            }
+            Views.Index.Templater.template("movies-browse-template", {
+                "letters": Library.Utils.initArrayOrdered(26, 'A'.charCodeAt(0)).concat(Library.Utils.initArrayOrdered(10, '0'.charCodeAt(0)))
             });
         };
         return Movies;
@@ -773,6 +783,10 @@ var DB;
         MoviesDB.all = function () {
             var movies = Library.Filer.Current().getFile("json/movies.json");
             return Enumerable.From(movies).Select(function (x) { return new Movie(x.id, x.title, x.year, x.img); });
+        };
+        MoviesDB.getByStart = function (str) {
+            str = str.toLowerCase();
+            return MoviesDB.all().Where(function (x) { return x.title.toLowerCase().indexOf(str) == 0; });
         };
         MoviesDB.take = function (offset, take) {
             return MoviesDB.all().slice(offset, offset + take);

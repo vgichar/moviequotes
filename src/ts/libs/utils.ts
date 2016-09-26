@@ -20,10 +20,10 @@ module Library{
 			return result;
 		}
 
-		public static initArrayOrdered = (size) => {
+		public static initArrayOrdered = (size, startChar = 0) => {
 			let result = [];
 			for(let i = 0; i < size; i++){
-				result.push(i);
+				result.push(startChar + i);
 			}
 
 			return result;
