@@ -3,7 +3,10 @@
 		<h3>{{movie.title}}</h3>
 
 		{{for quote in quotes}}
-			<div>{{quote.text}}</div>
+			<h3>Quote {{$index1}}</h3>
+			{{for line in quote.lines}}
+				<div>{{line.text}}</div>
+			{{endfor}}
 		{{endfor}}
 	</div>
 </template>

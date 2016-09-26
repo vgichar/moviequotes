@@ -9,7 +9,7 @@ module Views{
 			
 			Views.Index.Templater.template("movie-details-template", {
 				"movie": movie,
-				"quotes": quotes
+				"quotes": quotes.ToArray()
 			});
 		}
 	}

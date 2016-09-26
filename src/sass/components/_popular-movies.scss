@@ -1,4 +1,4 @@
-.quotes{
+.popular-movies{
 	margin: 0 50px;
 	> a {
 		display: block;
@@ -10,7 +10,7 @@
 		-webkit-box-shadow: none !important;
 
 		img{
-			width: 100%; 
+			width: auto; 
 		}
 
 		p{

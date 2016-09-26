@@ -139,12 +139,9 @@ nav {
       width: 30px;
       height: auto; }
 
-.quote-card {
-  margin: 50px; }
-
-.quotes {
+.popular-movies {
   margin: 0 50px; }
-  .quotes > a {
+  .popular-movies > a {
     display: block;
     border: 0;
     border-bottom: 1px solid #ccc;
@@ -152,11 +149,14 @@ nav {
     background: white;
     box-shadow: none !important;
     -webkit-box-shadow: none !important; }
-    .quotes > a img {
-      width: 100%; }
-    .quotes > a p {
+    .popular-movies > a img {
+      width: auto; }
+    .popular-movies > a p {
       margin-top: 20px; }
-    .quotes > a .social {
+    .popular-movies > a .social {
       float: right; }
-      .quotes > a .social span {
+      .popular-movies > a .social span {
         font-size: small; }
+
+.quote-card {
+  margin: 50px; }

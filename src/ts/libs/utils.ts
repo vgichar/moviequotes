@@ -116,10 +116,13 @@ module Library{
 		        if (Object(cur) !== cur) {
 		            result[prop] = cur;
 		        } else if (Array.isArray(cur)) {
-		            for(var i=0, l=cur.length; i<l; i++)
+		        	let l = cur.length;
+		            for(var i = 0; i < l; i++){
 		                recurse(cur[i], prop + "[" + i + "]");
-		            if (l == 0)
+		            }
+		            if (l == 0){
 		                result[prop] = [];
+		            }
 		        } else {
 		            var isEmpty = true;
 		            for (var p in cur) {
@@ -134,17 +137,21 @@ module Library{
 		    return result;
 		}
 
-		public static camelToKebabCase = (str: string) => {
-			let result = "";
-			for(let i = 0; i < str.length; i++){
-				if(str[i] >= 'A' && str[i] <= 'Z'){
-					result += "-" + str[i].toLowerCase();
-				}else{
-					result += str[i];
-				}
-			}
+		public static slugify = (str : string) => {
+			return str
+		        .toLowerCase()
+		        .replace(/[^\w ]+/g,'')
+		        .replace(/ +/g,'-');
+		}
 
-			return result;
+		public static htmlEncode = (str: string) => {
+		  var el = document.createElement("div");
+		  el.innerHTML = str;
+		  return el.innerText;
+		}
+
+		public static escapeRegExp = (str:string) => {
+		  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 		}
 	}
 }

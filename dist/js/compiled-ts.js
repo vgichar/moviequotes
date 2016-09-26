@@ -255,12 +255,16 @@ var Library;
                     var elTemplate = self.templates[name_3];
                     var templateData = self.templatesData[name_3];
                     if (elBlock && elTemplate) {
-                        for (var j in self.interpolationRules) {
-                            self.interpolationRules[j](elTemplate, templateData);
-                        }
+                        elTemplate.innerHTML = self.interpolate(elTemplate.innerHTML, templateData);
                         self.replaceHtml(elBlock, elTemplate);
                     }
                 }
+            };
+            this.interpolate = function (html, data) {
+                for (var j in _this.interpolationRules) {
+                    html = _this.interpolationRules[j](html, data);
+                }
+                return html;
             };
             this.replaceHtml = function (elBlock, elTemplate) {
                 var elTemplateSubstituteNode = document.createElement("div");
@@ -294,40 +298,143 @@ var Library;
         function DefaultInterpolationRules() {
         }
         DefaultInterpolationRules.init = function (templater) {
+            DefaultInterpolationRules.templater = templater;
             templater.addInterpolationRule(DefaultInterpolationRules.renderFieldsRule);
             templater.addInterpolationRule(DefaultInterpolationRules.foreachRule);
+            templater.addInterpolationRule(DefaultInterpolationRules.ifElseRule);
+            templater.addInterpolationRule(DefaultInterpolationRules.renderAnythingRule);
         };
-        DefaultInterpolationRules.renderFieldsRule = function (elTemplate, templateData) {
-            var flatData = Library.Utils.flattenJSON(templateData);
+        DefaultInterpolationRules.renderFieldsRule = function (html, templateData) {
+            var scope = new Scope(templateData);
+            var flatData = scope.getFlatData();
             for (var field in flatData) {
                 var value = flatData[field];
-                elTemplate.innerHTML = elTemplate.innerHTML.replace(new RegExp("{{\\s*" + Library.Utils.camelToKebabCase(field) + "\\s*}}", 'g'), value);
+                html = html.replace(new RegExp("{{\\s*" + Library.Utils.escapeRegExp(field) + "\\s*}}", 'g'), value);
             }
+            return html;
         };
-        DefaultInterpolationRules.foreachRule = function (elTemplate, templateData) {
+        DefaultInterpolationRules.foreachRule = function (html, templateData) {
             var patternRegex = new RegExp("{{\\s*for .* in .*\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
             var arrayVarRegex = new RegExp("{{\\s*for .* in (.*)\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
             var objVarRegex = new RegExp("{{\\s*for (.*) in .*\\s*}}(.|\\n|\\r)*{{\\s*endfor\\s*}}", 'g');
             var repeatableHtmlRegex = new RegExp("{{\\s*for .* in .*\\s*}}((.|\\n|\\r)*){{\\s*endfor\\s*}}", 'g');
-            var foreachMatches = elTemplate.innerHTML.match(patternRegex);
+            var foreachMatches = html.match(patternRegex);
             for (var m in foreachMatches) {
                 var resultHtml = "";
                 var foreachTemplate = foreachMatches[m];
-                var arrayVar = foreachTemplate.replace(arrayVarRegex, "$1");
-                var objVar = foreachTemplate.replace(objVarRegex, "$1");
-                var repeatableHtml = foreachTemplate.replace(repeatableHtmlRegex, "$1");
-                for (var i in templateData[arrayVar]) {
-                    var objVarData = templateData[arrayVar][i];
-                    var rowHtml = repeatableHtml;
-                    for (var field in templateData[arrayVar][i]) {
-                        rowHtml = rowHtml.replace(new RegExp("{{\\s*" + objVar + "." + Library.Utils.camelToKebabCase(field) + "\\s*}}", 'g'), templateData[arrayVar][i][field]);
-                    }
-                    resultHtml += rowHtml;
+                var arrayVar = foreachTemplate.replace(arrayVarRegex, "$1"); // example movie.quotes
+                var objVar = foreachTemplate.replace(objVarRegex, "$1"); // example quote // scope temp
+                var repeatableHtml = foreachTemplate.replace(repeatableHtmlRegex, "$1"); // example {{quote.text}}
+                var scope = new Scope(templateData);
+                var arr = scope.getValue(arrayVar);
+                var counter = 0;
+                for (var i in arr) {
+                    scope.setValue(objVar, arr[i]);
+                    scope.setValue("$index", counter);
+                    scope.setValue("$index1", counter + 1);
+                    counter++;
+                    resultHtml += DefaultInterpolationRules.templater.interpolate(repeatableHtml, scope.getData());
+                    scope.unsetValue(objVar);
+                    scope.unsetValue("$index");
+                    scope.unsetValue("$index1");
                 }
-                elTemplate.innerHTML = elTemplate.innerHTML.replace(foreachTemplate, resultHtml);
+                html = html.replace(foreachTemplate, resultHtml);
             }
+            return html;
+        };
+        DefaultInterpolationRules.ifElseRule = function (html, templateData) {
+            var ifEndifRegion = new RegExp("{{\\s*if\\s*(.*)\\s*}}((.|\\n|\\r)*){{\\s*endif\\s*}}", 'g');
+            var elseRegex = new RegExp("{{\\s*else\\s*}}", 'g');
+            var matches = html.match(ifEndifRegion);
+            var scope = new Scope(templateData);
+            for (var m in matches) {
+                var match = matches[m];
+                var hasElse = match.match(elseRegex).length > 0;
+                var condition = match.replace(ifEndifRegion, "$1");
+                condition = Library.Utils.htmlEncode(condition);
+                var block = match.replace(ifEndifRegion, "$2");
+                var blocks = [block];
+                if (hasElse) {
+                    blocks = block.split(new RegExp("{{\\s*else\\s*}}", 'g'));
+                }
+                scope.makeGlobal();
+                if (eval(condition)) {
+                    html = html.replace(match, blocks[0]);
+                }
+                else if (blocks.length == 2) {
+                    html = html.replace(match, blocks[1]);
+                }
+                scope.makeLocal();
+            }
+            return html;
+        };
+        DefaultInterpolationRules.renderAnythingRule = function (html, templateData) {
+            var regex = new RegExp("{{(.*)}}", 'g');
+            var codeRegex = new RegExp("{{(.*)}}", 'g');
+            var matches = html.match(regex);
+            var scope = new Scope(templateData);
+            scope.makeGlobal();
+            for (var m in matches) {
+                var match = matches[m];
+                var code = match.replace(codeRegex, "$1");
+                html = html.replace(match, eval(code));
+            }
+            scope.makeLocal();
+            return html;
         };
         return DefaultInterpolationRules;
+    }());
+    var Scope = (function () {
+        function Scope(data) {
+            this.data = data;
+        }
+        Scope.prototype.setValue = function (key, value) {
+            this.gv(this.data, key, value);
+        };
+        Scope.prototype.unsetValue = function (key) {
+            this.gvf(this.data, key, undefined);
+        };
+        Scope.prototype.getValue = function (key) {
+            return this.gv(this.data, key);
+        };
+        Scope.prototype.getData = function () {
+            return this.data;
+        };
+        Scope.prototype.getFlatData = function () {
+            return Library.Utils.flattenJSON(this.data);
+        };
+        Scope.prototype.makeGlobal = function () {
+            for (var i in this.data) {
+                window[i] = this.data[i];
+            }
+        };
+        Scope.prototype.makeLocal = function () {
+            for (var i in this.data) {
+                delete window[i];
+            }
+        };
+        Scope.prototype.gv = function (d, k, v) {
+            if (v === void 0) { v = undefined; }
+            if (k.indexOf(".") >= 0) {
+                var firstKey = k.split('.')[0];
+                var newKey = k.substring(firstKey.length + 1, k.length);
+                return this.gv(d[firstKey], newKey, v);
+            }
+            if (v != undefined) {
+                d[k] = v;
+            }
+            return d[k];
+        };
+        Scope.prototype.gvf = function (d, k, v) {
+            if (k.indexOf(".") >= 0) {
+                var firstKey = k.split('.')[0];
+                var newKey = k.substring(firstKey.length + 1, k.length);
+                return this.gv(d[firstKey], newKey, v);
+            }
+            d[k] = v;
+            return d[k];
+        };
+        return Scope;
     }());
 })(Library || (Library = {}));
 /// <reference path="../_references.ts" />
@@ -481,10 +588,13 @@ var Library;
                     result[prop] = cur;
                 }
                 else if (Array.isArray(cur)) {
-                    for (var i = 0, l = cur.length; i < l; i++)
+                    var l = cur.length;
+                    for (var i = 0; i < l; i++) {
                         recurse(cur[i], prop + "[" + i + "]");
-                    if (l == 0)
+                    }
+                    if (l == 0) {
                         result[prop] = [];
+                    }
                 }
                 else {
                     var isEmpty = true;
@@ -499,17 +609,19 @@ var Library;
             recurse(data, "");
             return result;
         };
-        Utils.camelToKebabCase = function (str) {
-            var result = "";
-            for (var i = 0; i < str.length; i++) {
-                if (str[i] >= 'A' && str[i] <= 'Z') {
-                    result += "-" + str[i].toLowerCase();
-                }
-                else {
-                    result += str[i];
-                }
-            }
-            return result;
+        Utils.slugify = function (str) {
+            return str
+                .toLowerCase()
+                .replace(/[^\w ]+/g, '')
+                .replace(/ +/g, '-');
+        };
+        Utils.htmlEncode = function (str) {
+            var el = document.createElement("div");
+            el.innerHTML = str;
+            return el.innerText;
+        };
+        Utils.escapeRegExp = function (str) {
+            return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
         };
         return Utils;
     }());
@@ -535,10 +647,10 @@ var Views;
                     "movie-details.html",
                     "templates/movie-details-template.html",
                     "templates/quote-card-template.html",
-                    "templates/quotes-template.html",
+                    "templates/popular-movies-template.html",
                     "templates/movies-template.html",
                     "json/movies.json",
-                    "json/quotes.json"
+                    "json/popular-movies.json"
                 ]);
             };
             this.registerRoutes = function () {
@@ -552,15 +664,15 @@ var Views;
             };
             this.setQuoteOfTheDayTempalteData = function () {
                 var quoteOfTheDay = DB.QuotesDB.getQuoteOfTheDay();
-                var movie = DB.MoviesDB.get(quoteOfTheDay.movieId);
+                var movie = DB.MoviesDB.get(quoteOfTheDay.movieSlug);
                 Views.Index.Templater.template("quote-card-template", {
                     "movie": {
-                        "id": quoteOfTheDay.movieId,
+                        "slug": quoteOfTheDay.movieSlug,
                         "name": movie.title,
-                        "cover-photo": movie.coverPhoto
+                        "coverPhoto": movie.coverPhoto
                     },
                     "quote": {
-                        "text": quoteOfTheDay.text,
+                        "lines": quoteOfTheDay.lines,
                         "likes": parseInt((Math.random() * 100000).toString())
                     }
                 });
@@ -586,23 +698,13 @@ var Views;
         function Home() {
         }
         Home.beforeLoad = function (route, args) {
-            var count = 3;
-            var prev = [];
-            var templateData = { movies: [] };
-            for (var i = 1; i <= count; i++) {
-                var quote = DB.QuotesDB.getRandomQuote(prev);
-                if (quote) {
-                    var movie = DB.MoviesDB.get(quote.movieId);
-                    templateData["movies"].push({
-                        "movie-id": movie.id,
-                        "movie-title": movie.title,
-                        "movie-cover-photo": movie.coverPhoto,
-                        "quote-text": quote.text
-                    });
-                    prev.push(quote.id);
-                }
+            var templateData = {};
+            var movies = DB.MoviesDB.getPopularMovies().ToArray();
+            for (var i in movies) {
+                movies[i]["quote"] = DB.QuotesDB.getByMovie(movies[i].slug).First();
             }
-            Views.Index.Templater.template("quotes-template", templateData);
+            templateData["movies"] = movies;
+            Views.Index.Templater.template("popular-movies-template", templateData);
         };
         return Home;
     }());
@@ -616,7 +718,7 @@ var Views;
         }
         Movies.beforeLoad = function (route, args) {
             Views.Index.Templater.template("movies-template", {
-                "movies": DB.MoviesDB.all()
+                "movies": DB.MoviesDB.all().ToArray()
             });
         };
         return Movies;
@@ -634,7 +736,7 @@ var Views;
             var quotes = DB.QuotesDB.getByMovie(args.id);
             Views.Index.Templater.template("movie-details-template", {
                 "movie": movie,
-                "quotes": quotes
+                "quotes": quotes.ToArray()
             });
         };
         return MovieDetails;
@@ -645,7 +747,23 @@ var Views;
 var DB;
 (function (DB) {
     var Movie = (function () {
-        function Movie() {
+        function Movie(id, title, year, img) {
+            this.id = id;
+            this.title = title;
+            this.year = year;
+            if (img && img != null) {
+                this.coverPhotoBase = img;
+                this.coverPhoto = "https://images-na.ssl-images-amazon.com/images/M/" + img + "._V1_UX182_CR0,0,182,268_AL_.jpg";
+                this.smallCoverPhoto = "https://images-na.ssl-images-amazon.com/images/M/" + img + "._V1_UX90_CR0,0,90,150_AL_.jpg";
+                this.verySmallCoverPhoto = "https://images-na.ssl-images-amazon.com/images/M/" + img + "._V1_UX50_CR0,0,50,80_AL_.jpg";
+            }
+            else {
+                this.coverPhotoBase = undefined;
+                this.coverPhoto = "http://placehold.it/150x250";
+                this.smallCoverPhoto = "http://placehold.it/100x150";
+                this.verySmallCoverPhoto = "http://placehold.it/50x80";
+            }
+            this.slug = Library.Utils.slugify(title + " " + year);
         }
         return Movie;
     }());
@@ -653,39 +771,52 @@ var DB;
         function MoviesDB() {
         }
         MoviesDB.all = function () {
-            return Library.Filer.Current().getFile("json/movies.json");
+            var movies = Library.Filer.Current().getFile("json/movies.json");
+            return Enumerable.From(movies).Select(function (x) { return new Movie(x.id, x.title, x.year, x.img); });
         };
         MoviesDB.take = function (offset, take) {
             return MoviesDB.all().slice(offset, offset + take);
         };
-        MoviesDB.get = function (id) {
-            id = parseInt(id.toString());
-            return Enumerable.From(MoviesDB.all()).Single(function (x) { return x.id == id; });
+        MoviesDB.get = function (slug) {
+            return MoviesDB.all().Single(function (x) { return x.slug == slug; });
         };
         MoviesDB.getMovieOfTheDay = function () {
-            var movies = MoviesDB.all();
+            var movies = MoviesDB.all().ToArray();
             var previous = LocalStorageMovies.getPreviousMovies();
             var current = LocalStorageMovies.getCurrentMovie();
             if (!current) {
                 var hash = Library.Utils.hashCode(Library.Utils.now()) % movies.length;
-                LocalStorageMovies.setCurrentMovie(hash, Library.Utils.today(), Library.Utils.today(1));
-                return MoviesDB.get(hash);
+                LocalStorageMovies.setCurrentMovie(movies[hash].slug, Library.Utils.today(), Library.Utils.today(1));
+                return movies[hash];
             }
             if (current.dateFrom <= Library.Utils.now() && current.dateTo >= Library.Utils.now()) {
-                return MoviesDB.get(current.id);
+                return MoviesDB.get(current.slug);
             }
             else {
-                LocalStorageMovies.addPreviousMovie(current.id, current.dateFrom, current.dateTo);
+                LocalStorageMovies.addPreviousMovie(current.slug, current.dateFrom, current.dateTo);
                 if (previous.length == movies.length) {
                     LocalStorageMovies.resetPreviousMovies();
                 }
-                var prevIds = Enumerable.From(previous).Select(function (x) { return x.id; });
+                var prevIds = Enumerable.From(previous).Select(function (x) { return x.slug; });
                 var movieIds = Library.Utils.initArrayOrdered(movies.length);
                 var notSeen = Enumerable.From(movieIds).Except(prevIds).ToArray();
                 var hash = Library.Utils.hashCode(Library.Utils.now()) % notSeen.length;
-                LocalStorageMovies.setCurrentMovie(hash, Library.Utils.today(), Library.Utils.today(1));
+                LocalStorageMovies.setCurrentMovie(movies[hash], Library.Utils.today(), Library.Utils.today(1));
                 return MoviesDB.get(hash);
             }
+        };
+        MoviesDB.getRandomMovie = function (notIn) {
+            if (notIn === void 0) { notIn = []; }
+            var notInEnum = Enumerable.From(notIn);
+            var notSeenMovies = MoviesDB.all().Where(function (x) { return notInEnum.Any(function (y) { return y == x.slug; }); }).ToArray();
+            if (notSeenMovies.length == 0)
+                return undefined;
+            var hash = Library.Utils.hashCode(Library.Utils.now()) % notSeenMovies.length;
+            return MoviesDB.get(notSeenMovies[hash].slug);
+        };
+        MoviesDB.getPopularMovies = function () {
+            var movies = Library.Filer.Current().getFile("json/popular-movies.json");
+            return Enumerable.From(movies).Select(function (x) { return new Movie(x.id, x.title, x.year, x.img); });
         };
         return MoviesDB;
     }());
@@ -701,10 +832,9 @@ var DB;
             }
             return movies;
         };
-        LocalStorageMovies.addPreviousMovie = function (id, dateFrom, dateTo) {
+        LocalStorageMovies.addPreviousMovie = function (slug, dateFrom, dateTo) {
             var movies = LocalStorageMovies.getPreviousMovies();
-            id = parseInt(id.toString());
-            movies.push({ id: id, dateFrom: dateFrom, dateTo: dateTo });
+            movies.push({ slug: slug, dateFrom: dateFrom, dateTo: dateTo });
             localStorage["previousMovies"] = JSON.stringify(movies);
         };
         LocalStorageMovies.resetPreviousMovies = function () {
@@ -714,9 +844,8 @@ var DB;
             var movie = localStorage["currentMovie"];
             return movie ? JSON.parse(movie) : undefined;
         };
-        LocalStorageMovies.setCurrentMovie = function (id, dateFrom, dateTo) {
-            id = parseInt(id.toString());
-            localStorage["currentMovie"] = JSON.stringify({ id: id, dateFrom: dateFrom, dateTo: dateTo });
+        LocalStorageMovies.setCurrentMovie = function (slug, dateFrom, dateTo) {
+            localStorage["currentMovie"] = JSON.stringify({ slug: slug, dateFrom: dateFrom, dateTo: dateTo });
         };
         return LocalStorageMovies;
     }());
@@ -725,38 +854,39 @@ var DB;
 var DB;
 (function (DB) {
     var Quote = (function () {
-        function Quote() {
+        function Quote(id, lines, movieSlug) {
+            this.id = id++;
+            this.lines = lines;
+            this.movieSlug = movieSlug;
         }
         return Quote;
     }());
     var QuotesDB = (function () {
         function QuotesDB() {
         }
-        QuotesDB.all = function () {
-            return Library.Filer.Current().getFile("json/quotes.json");
-        };
-        QuotesDB.take = function (offset, take) {
-            return QuotesDB.all().slice(offset, offset + take);
-        };
-        QuotesDB.get = function (id) {
+        QuotesDB.get = function (id, movieSlug) {
             id = parseInt(id.toString());
-            return Enumerable.From(QuotesDB.all()).Single(function (x) { return x.id == id; });
+            return QuotesDB.getByMovie(movieSlug).Single(function (x) { return x.id == id; });
         };
-        QuotesDB.getByMovie = function (movieId) {
-            movieId = parseInt(movieId.toString());
-            return Enumerable.From(QuotesDB.all()).Where(function (x) { return x.movieId == movieId; }).ToArray();
+        QuotesDB.getByMovie = function (movieSlug) {
+            var movieQuotesObj = Library.Filer.Current().getFile("json/quotes/" + movieSlug + ".json");
+            var movieQuotes = movieQuotesObj.quotes;
+            var idx = 0;
+            return Enumerable.From(movieQuotes).Select(function (x) { return new Quote(idx, x.lines, movieSlug); });
         };
         QuotesDB.getQuoteOfTheDay = function () {
-            var quotes = QuotesDB.all();
+            var movieOfTheDay = DB.MoviesDB.getMovieOfTheDay();
+            var quotes = QuotesDB.getByMovie(movieOfTheDay.slug).ToArray();
             var previous = LocalStorageQuotes.getPreviousQuotes();
             var current = LocalStorageQuotes.getCurrentQuote();
             if (!current) {
                 var hash = Library.Utils.hashCode(Library.Utils.now()) % quotes.length;
                 LocalStorageQuotes.setCurrentQuote(hash, Library.Utils.today(), Library.Utils.today(1));
-                return QuotesDB.get(hash);
+                return quotes[hash];
             }
             if (current.dateFrom <= Library.Utils.now() && current.dateTo >= Library.Utils.now()) {
-                return QuotesDB.get(current.id);
+                var hash = Library.Utils.hashCode(Library.Utils.now()) % quotes.length;
+                return quotes[hash];
             }
             else {
                 LocalStorageQuotes.addPreviousQuote(current.id, current.dateFrom, current.dateTo);
@@ -768,18 +898,19 @@ var DB;
                 var notSeen = Enumerable.From(quoteIds).Except(prevIds).ToArray();
                 var hash = Library.Utils.hashCode(Library.Utils.now()) % notSeen.length;
                 LocalStorageQuotes.setCurrentQuote(hash, Library.Utils.today(), Library.Utils.today(1));
-                return QuotesDB.get(notSeen[hash]);
+                return quotes[notSeen[hash]];
             }
         };
         QuotesDB.getRandomQuote = function (notIn) {
             if (notIn === void 0) { notIn = []; }
-            var quotes = QuotesDB.all();
+            var movie = DB.MoviesDB.getRandomMovie();
+            if (movie == undefined || notIn[movie.slug] == true)
+                return undefined;
+            var quotes = QuotesDB.getByMovie(movie.slug);
             var quoteIds = Library.Utils.initArrayOrdered(quotes.length);
             var notSeen = Enumerable.From(quoteIds).Except(notIn).ToArray();
-            if (notSeen.length == 0)
-                return undefined;
             var hash = Library.Utils.hashCode(Library.Utils.now()) % notSeen.length;
-            return QuotesDB.get(notSeen[hash]);
+            return quotes[notSeen[hash]];
         };
         return QuotesDB;
     }());

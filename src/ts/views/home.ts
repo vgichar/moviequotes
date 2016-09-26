@@ -4,27 +4,16 @@ module Views{
 	export class Home{
 
 		public static beforeLoad = (route, args) => {
-			let count = 3;
-			let prev = [];
-			let templateData = {movies: []};
+			let templateData = {};
+			let movies = DB.MoviesDB.getPopularMovies().ToArray();
 
-			for(let i = 1; i <= count; i++){
-				let quote = DB.QuotesDB.getRandomQuote(prev);
-				if(quote){
-					let movie = DB.MoviesDB.get(quote.movieId);
-
-					templateData["movies"].push({
-						"movie-id": movie.id,
-						"movie-title": movie.title,
-						"movie-cover-photo": movie.coverPhoto,
-						"quote-text": quote.text
-					})
-
-					prev.push(quote.id);
-				}
+			for(let i in movies){
+				movies[i]["quote"] = DB.QuotesDB.getByMovie(movies[i].slug).First();
 			}
+
+			templateData["movies"] = movies;
 			
-			Views.Index.Templater.template("quotes-template", templateData);
+			Views.Index.Templater.template("popular-movies-template", templateData);
 		}
 	}
 }

@@ -1,16 +1,18 @@
 <template name="quote-card-template">
 	<div class="quote-card">
 		<h3>Quote of the day</h3>
-		<h4><a href="#!/movie-details/{{movie.id}}">{{movie.name}}</a></h4>
+		<h4><a href="#!/movie-details/{{movie.slug}}">{{movie.name}}</a></h4>
 		<div>
-			<a href="#!/movie-details/{{movie.id}}">
-				<img src="{{movie.cover-photo}}">
+			<a href="#!/movie-details/{{movie.slug}}">
+				<img src="{{movie.coverPhoto}}">
 			</a>
 		</div>
 		<br>
 		<p>
-			<a href="#!/movie-details/{{movie.id}}">
-				{{quote.text}}
+			<a href="#!/movie-details/{{movie.slug}}">
+				{{for line in quote.lines}}
+					{{line.text}}
+				{{endfor}}
 			</a>
 		</p>
 		<div>{{quote.likes}} Liked this</div>

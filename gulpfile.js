@@ -43,11 +43,10 @@ gulp.task("watch", ["build"], function(){
     gulp.watch('src/ts/**', ['build-typescript']);
     gulp.watch('src/views/**', ['copy-views']);
     gulp.watch('src/images/**', ['copy-images']);
-    gulp.watch('src/json/**/*.json', ['copy-json']);
     gulp.watch('src/**/*.js', ['copy-js']);
 });
 
-gulp.task("build", ["build-sass", "build-typescript", "copy-views", "copy-images", "copy-json", "copy-static", "copy-vendor", "copy-js"]);
+gulp.task("build", ["build-sass", "build-typescript", "copy-views", "copy-images", "copy-static", "copy-vendor", "copy-js", "copy-json"]);
 
 gulp.task("build-sass", function(){ 
     gulp.src('src/sass/style.scss')

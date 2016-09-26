@@ -22,10 +22,10 @@ module Views{
 				"movie-details.html",
 				"templates/movie-details-template.html",
 				"templates/quote-card-template.html",
-				"templates/quotes-template.html",
+				"templates/popular-movies-template.html",
 				"templates/movies-template.html",
 				"json/movies.json",
-				"json/quotes.json"
+				"json/popular-movies.json"
 			]);
 		}
 
@@ -42,16 +42,16 @@ module Views{
 
 		private setQuoteOfTheDayTempalteData = () => {
 			let quoteOfTheDay = DB.QuotesDB.getQuoteOfTheDay();
-			let movie = DB.MoviesDB.get(quoteOfTheDay.movieId);
-
+			let movie = DB.MoviesDB.get(quoteOfTheDay.movieSlug);
+			
 			Views.Index.Templater.template("quote-card-template", {
 				"movie": {
-					"id": quoteOfTheDay.movieId,
+					"slug": quoteOfTheDay.movieSlug,
 					"name": movie.title,
-					"cover-photo": movie.coverPhoto,
+					"coverPhoto": movie.coverPhoto,
 				},
 				"quote": {
-					"text": quoteOfTheDay.text,
+					"lines": quoteOfTheDay.lines,
 					"likes": parseInt((Math.random() * 100000).toString())
 				}
 			});

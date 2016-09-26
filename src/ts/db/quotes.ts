@@ -2,43 +2,46 @@
 
 module DB{
 	class Quote{
+		public constructor(id, lines: string[], movieSlug){
+			this.id = id++;
+			this.lines = lines;
+			this.movieSlug = movieSlug;
+		}
+
 		public id: number;
-		public movieId: number;
-		public text: string;
+		public lines: string[];
+		public movieSlug: number;
 	}
 
 	export class QuotesDB{
-		public static all = (): {id:number, movieId:number, text:string}[] => {
-			return Library.Filer.Current().getFile("json/quotes.json");
-		}
-
-		public static take = (offset, take): {id:number, movieId:number, text:string}[] => {
-			return QuotesDB.all().slice(offset, offset + take);
-		}
-
-		public static get = (id): {id:number, movieId:number, text:string} => {
+		public static get = (id, movieSlug): Quote => {
 			id = parseInt(id.toString());
-			return Enumerable.From(QuotesDB.all()).Single(x => x.id == id);
+			return QuotesDB.getByMovie(movieSlug).Single(x => x.id == id);
 		}
 
-		public static getByMovie = (movieId): {id:number, movieId:number, text:string}[] => {
-			movieId = parseInt(movieId.toString());
-			return Enumerable.From(QuotesDB.all()).Where(x => x.movieId == movieId).ToArray();
+		public static getByMovie = (movieSlug): any => {
+			let movieQuotesObj: any = Library.Filer.Current().getFile("json/quotes/" + movieSlug + ".json");
+			let movieQuotes: any[] = movieQuotesObj.quotes;
+			let idx = 0;
+			return Enumerable.From(movieQuotes).Select(x => new Quote(idx, x.lines, movieSlug));
 		}
 
-		public static getQuoteOfTheDay = () => {
-			let quotes = QuotesDB.all();
+		public static getQuoteOfTheDay = (): Quote => {
+			let movieOfTheDay = MoviesDB.getMovieOfTheDay();
+			let quotes: Quote[] = QuotesDB.getByMovie(movieOfTheDay.slug).ToArray();
+
 			let previous = LocalStorageQuotes.getPreviousQuotes();
 			let current = LocalStorageQuotes.getCurrentQuote();
 
 			if(!current){
 				let hash = Library.Utils.hashCode(Library.Utils.now()) % quotes.length;
 				LocalStorageQuotes.setCurrentQuote(hash, Library.Utils.today(), Library.Utils.today(1));
-				return QuotesDB.get(hash);
+				return quotes[hash];
 			}
 
 			if(current.dateFrom <= Library.Utils.now() && current.dateTo >= Library.Utils.now()){
-				return QuotesDB.get(current.id);
+				let hash = Library.Utils.hashCode(Library.Utils.now()) % quotes.length;
+				return quotes[hash];
 			}else{
 				LocalStorageQuotes.addPreviousQuote(current.id, current.dateFrom, current.dateTo);
 
@@ -54,21 +57,22 @@ module DB{
 
 				LocalStorageQuotes.setCurrentQuote(hash, Library.Utils.today(), Library.Utils.today(1));
 
-				return QuotesDB.get(notSeen[hash]);
+				return quotes[notSeen[hash]];
 			}
 		}
 
-		public static getRandomQuote = (notIn: number[] = []): {id:number, movieId:number, text:string} => {
-			let quotes = QuotesDB.all();
-			let quoteIds = Library.Utils.initArrayOrdered(quotes.length);
-			let notSeen = Enumerable.From(quoteIds).Except(notIn).ToArray();
-			
-			if(notSeen.length == 0)
+		public static getRandomQuote = (notIn: string[] = []): Quote => {
+			let movie = MoviesDB.getRandomMovie();
+			if(movie == undefined || notIn[movie.slug] == true)
 				return undefined;
+
+			let quotes = QuotesDB.getByMovie(movie.slug);
+			let quoteIds = Library.Utils.initArrayOrdered(quotes.length);
+			let notSeen = Enumerable.From(quoteIds).Except(notIn).ToArray();			
 			
 			let hash = Library.Utils.hashCode(Library.Utils.now()) % notSeen.length;
 
-			return QuotesDB.get(notSeen[hash]);
+			return quotes[notSeen[hash]];
 		}
 	}
 
