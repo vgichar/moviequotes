@@ -1,0 +1,20 @@
+<template>
+	<h3>{{movie.title}}</h3>
+	<img src="{{movie.coverPhoto}}">
+	{{for quote in quotes}}
+		<h3>Quote {{$index1}}</h3>
+		{{for line in quote.lines}}
+			<div>
+				<strong>{{line.character ? line.character + ": " : ""}}</strong>
+				{{line.text}}
+			</div>
+		{{endfor}}
+		
+		<div class="social">
+			<span>Like</span>
+			<span>Share</span>
+			<span>Tweet</span>
+		</div>
+		<hr>
+	{{endfor}}
+</template>

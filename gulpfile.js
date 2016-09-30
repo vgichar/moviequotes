@@ -5,6 +5,7 @@ var ts = require("gulp-typescript");
 var imagemin = require("gulp-imagemin");
 var server = require('gulp-server-livereload');
 var autoprefixer = require('gulp-autoprefixer');
+var replace = require('gulp-replace');
 
 var vendorScripts = [
 	'bower_components/bootstrap/dist/js/bootstrap.min.js',
@@ -38,14 +39,17 @@ gulp.task('serve', ['watch'], function() {
     }));
 });
 
-gulp.task("watch", ["build"], function(){
+gulp.task("watch", ["build-fast"], function(){
     gulp.watch('src/sass/**', ['build-sass']);
     gulp.watch('src/ts/**', ['build-typescript']);
     gulp.watch('src/views/**', ['copy-views']);
+    gulp.watch('src/index.html', ['copy-views']);
     gulp.watch('src/images/**', ['copy-images']);
     gulp.watch('src/**/*.js', ['copy-js']);
+    gulp.watch('src/json/*.json', ['copy-json-flat']);
 });
 
+gulp.task("build-fast", ["build-sass", "build-typescript", "copy-views", "copy-images", "copy-static", "copy-vendor", "copy-js", "copy-json-flat"]);
 gulp.task("build", ["build-sass", "build-typescript", "copy-views", "copy-images", "copy-static", "copy-vendor", "copy-js", "copy-json"]);
 
 gulp.task("build-sass", function(){ 
@@ -69,6 +73,8 @@ gulp.task("build-typescript", function(){
 gulp.task("copy-views", function(){
     gulp.src('src/views/**/*')
         .pipe(gulp.dest('dist'))
+    gulp.src('src/index.html')
+        .pipe(gulp.dest('dist'))
 });
 
 gulp.task("copy-images", function(){
@@ -79,6 +85,11 @@ gulp.task("copy-images", function(){
 
 gulp.task("copy-json", function(){
     gulp.src('src/json/**/*.json')
+        .pipe(gulp.dest('dist/json'))
+});
+
+gulp.task("copy-json-flat", function(){
+    gulp.src('src/json/*.json')
         .pipe(gulp.dest('dist/json'))
 });
 
@@ -95,6 +106,12 @@ gulp.task("copy-js", function(){
     gulp.src('src/ts/**/*.js')
         .pipe(gulp.dest('dist/js'))
 });
+
+gulp.task('preimport-views', function(){
+  var indexTsFile = 'src/ts/index.ts';
+  var tempaltesFolder = 'src/views/templates/*.html'
+  var viewsFolder = 'src/views/*.html'
+})
 
 gulp.task("copy-vendor", function(){
 	for(var i in vendorScripts){

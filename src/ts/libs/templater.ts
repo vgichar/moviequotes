@@ -152,9 +152,9 @@ module Library{
 
 		public static init = (templater) => {
 			DefaultInterpolationRules.templater = templater;
-			templater.addInterpolationRule(DefaultInterpolationRules.renderFieldsRule);
-			templater.addInterpolationRule(DefaultInterpolationRules.foreachRule);
 			templater.addInterpolationRule(DefaultInterpolationRules.ifElseRule);
+			templater.addInterpolationRule(DefaultInterpolationRules.foreachRule);
+			templater.addInterpolationRule(DefaultInterpolationRules.renderFieldsRule);
 
 			templater.addInterpolationRule(DefaultInterpolationRules.renderAnythingRule);
 		}
@@ -171,74 +171,84 @@ module Library{
 		}
 
 		private static foreachRule = (html, templateData) => {
-			let regex = new RegExp("{{\\s*for (.*) in (.*)\\s*}}((.|\\n|\\r)*){{\\s*endfor\\s*}}", 'g');
+			let startRegex = new RegExp("{{\\s*for (.*) in (.*)\\s*}}", 'g');
+			let endRegex = new RegExp("{{\\s*endfor\\s*}}", 'g');
 
-			let foreachMatches = html.match(regex);
-			for(let m in foreachMatches){
-				let resultHtml = "";
-				let foreachTemplate = foreachMatches[m];
+			return RuleUtil.scopefulRule(html, templateData, "for", "endfor", startRegex, endRegex, function(html, templateData, paddingFront, paddingBack){
+				let startPadded = "{{\\s*" + paddingFront + "for" + paddingBack + " (.*) in (.*)\\s*}}";
+				let endPadded = "{{\\s*" + paddingFront + "endfor" + paddingBack + "\\s*}}";
+				let contentWithLazyEnd = "(((.|\\n|\\r)(?!" + endPadded + "))*.)";
 
-				let objVar = foreachTemplate.replace(regex, "$1"); // example quote // scope temp
-				let arrayVar = foreachTemplate.replace(regex, "$2"); // example movie.quotes
-				let repeatableHtml = foreachTemplate.replace(regex, "$3"); // example {{quote.text}}
-
+				let regex = new RegExp(startPadded  + contentWithLazyEnd + endPadded, 'g');
 				let scope = new Scope(templateData);
 
-				let arr = scope.getValue(arrayVar);
-				let counter = 0;
-				for(let i in arr){
-					scope.setValue(objVar, arr[i]);
-					scope.setValue("$index", counter);
-					scope.setValue("$index1", counter + 1);
+				let blockMatches = html.match(regex);
+				for(let m in blockMatches){
+					let resultHtml = "";
+					let match = blockMatches[m];
 
-					counter++;
+					let objVar = match.replace(regex, "$1");
+					let arrayVar = match.replace(regex, "$2");
+					let repeatableHtml = match.replace(regex, "$3");
 
-					resultHtml += DefaultInterpolationRules.templater.interpolate(repeatableHtml, scope.getData());
-
-					scope.unsetValue(objVar);
-					scope.unsetValue("$index");
-					scope.unsetValue("$index1");
+					let arr = scope.getValue(arrayVar);
+					repeatableHtml = repeatableHtml.replace(new RegExp(objVar + "(?=(?!.*{{.*}}).*}})", 'g'), arrayVar + "[{{#}}]")
+					for(let k in arr){
+						resultHtml += repeatableHtml.replace(/{{#}}/g, k)
+						resultHtml = resultHtml.replace(new RegExp("{{\\s*\\$index\\s*}}", 'g'), k);
+						resultHtml = resultHtml.replace(new RegExp("{{\\s*\\$index1\\s*}}", 'g'), (parseInt(k) + 1).toString());
+					}
+					html = html.replace(match, resultHtml);
 				}
 
-				html = html.replace(foreachTemplate, resultHtml);
-			}
-
-			return html;
+				return html;
+			});
 		}
 
 		private static ifElseRule = (html, templateData) => {
-			let ifEndifRegion = new RegExp("{{\\s*if\\s*(.*)\\s*}}((.|\\n|\\r)*){{\\s*endif\\s*}}", 'g');
+			let startRegex = new RegExp("{{\\s*if\\s*(.*)\\s*}}", 'g');
+			let endRegex = new RegExp("{{\\s*endif\\s*}}", 'g');
 			let elseRegex = new RegExp("{{\\s*else\\s*}}", 'g');
+			
+			return RuleUtil.scopefulRule(html, templateData, "if", "endif", startRegex, endRegex, function(html, templateData, paddingFront, paddingBack){
+				let startPadded = "{{\\s*" + paddingFront + "if" + paddingBack + " (.*)\\s*}}";
+				let endPadded = "{{\\s*" + paddingFront + "endif" + paddingBack + "\\s*}}";
+				let contentWithLazyEnd = "(((.|\\n|\\r)(?!" + endPadded + "))*.)";
 
-			let matches = html.match(ifEndifRegion);
-			let scope = new Scope(templateData);
-			for(let m in matches){
-				let match = matches[m];
-				let hasElse = match.match(elseRegex).length > 0;
+				let regex = new RegExp(startPadded  + contentWithLazyEnd + endPadded, 'g');
+				let scope = new Scope(templateData);
 
-				let condition = match.replace(ifEndifRegion, "$1");
-				condition = Library.Utils.htmlEncode(condition);
+				let blockMatches = html.match(regex);
+				for(let m in blockMatches){
+					let match = blockMatches[m];
 
-				let block = match.replace(ifEndifRegion, "$2");
-				let blocks = [block];
-				if(hasElse){
-					blocks = block.split(new RegExp("{{\\s*else\\s*}}", 'g'));
+					let hasElse = match.match(elseRegex);
+					hasElse = hasElse && hasElse != null && hasElse.length > 0;
+					let condition = match.replace(regex, "$1");
+					condition = Library.Utils.htmlEncode(condition);
+
+					let block = match.replace(regex, "$2");
+					let blocks = [block];
+					if(hasElse){
+						blocks = block.split(new RegExp("{{\\s*else\\s*}}", 'g'));
+					}
+
+					scope.makeGlobal();
+					
+					if(eval(condition)){
+						html = html.replace(match, blocks[0]);
+					}else if(blocks.length == 2){
+						html = html.replace(match, blocks[1]);
+					}else{
+						html = html.replace(match, "");
+					}
+
+					scope.makeLocal();
+
 				}
 
-				scope.makeGlobal();
-				
-				if(eval(condition)){
-					html = html.replace(match, blocks[0]);
-				}else if(blocks.length == 2){
-					html = html.replace(match, blocks[1]);
-				}else{
-					html = html.replace(match, "");
-				}
-
-				scope.makeLocal();
-			}
-
-			return html;
+				return html;
+			});
 		}
 
 		private static renderAnythingRule = (html, templateData) => {
@@ -261,23 +271,61 @@ module Library{
 		}
 	}
 
+	class RuleUtil{
+		public static scopefulRule = (html, templateData, startScopeWord, endScopeWord, startScopeRegex, endScopeRegex, logicCallback) => {
+			let originalHtml = html;
+			let scope = new Scope(templateData);
+
+			let regionMatches = html.match(new RegExp(startScopeRegex.source + "|" + endScopeRegex.source, 'g'));
+			let level = 0;
+			let levelStack = {};
+			let max = 0;
+			for(let m in regionMatches){
+				if(regionMatches[m].indexOf(endScopeWord) < 0){
+					if(!levelStack[level]){
+						levelStack[level] = 0;
+					}
+					html = html.replace(regionMatches[m], regionMatches[m].replace(startScopeWord, level + startScopeWord + levelStack[level]))
+					level++;
+					max = max < level ? level : max;
+				}
+				else{
+					level--;
+					html = html.replace(regionMatches[m], regionMatches[m].replace(endScopeWord, level + endScopeWord + levelStack[level]))
+					levelStack[level]++;
+				}
+			}
+			for(let i = 0; i < max; i++){
+				for(let j = 0; j < levelStack[i]; j++){
+					html = logicCallback(html, templateData, i, j);
+				}
+			}
+			return html;
+		}
+	}
+
 	class Scope{
 		private data: any;
+		private flatData: any;
+		private cached: boolean;
 
 		public constructor(data){
 			this.data = data;
+			this.cached = false;
 		}
 
 		public setValue(key, value){
-			this.gv(this.data, key, value);
+			eval("this.data." + key + "=" + value);
+			this.cached = false;
 		}
 
 		public unsetValue(key){
-			this.gvf(this.data, key, undefined);
+			eval("this.data." + key + "=undefined");
+			this.cached = false;
 		}
 
 		public getValue(key){
-			return this.gv(this.data, key);
+			return eval("this.data." + key);
 		}
 
 		public getData(){
@@ -285,7 +333,12 @@ module Library{
 		}
 
 		public getFlatData(){
-			return Library.Utils.flattenJSON(this.data);
+			if(this.cached)
+				return this.flatData;
+
+			this.flatData = Library.Utils.flattenJSON(this.data);
+			this.cached = true;
+			return this.flatData;
 		}
 
 		public makeGlobal(){
@@ -298,28 +351,6 @@ module Library{
 			for(let i in this.data){
 				delete window[i];
 			}
-		}
-
-		private gv(d, k, v = undefined){
-			if(k.indexOf(".") >= 0){
-				let firstKey = k.split('.')[0];
-				let newKey = k.substring(firstKey.length + 1, k.length);
-				return this.gv(d[firstKey], newKey, v);
-			}
-			if(v != undefined){
-				d[k] = v;
-			}
-			return d[k];
-		}
-
-		private gvf(d, k, v){
-			if(k.indexOf(".") >= 0){
-				let firstKey = k.split('.')[0];
-				let newKey = k.substring(firstKey.length + 1, k.length);
-				return this.gv(d[firstKey], newKey, v);
-			}
-			d[k] = v;
-			return d[k];
 		}
 	}
 }
