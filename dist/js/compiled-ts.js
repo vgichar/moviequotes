@@ -772,16 +772,19 @@ var DB;
             _super.call(this, id);
             this.title = title;
             this.year = year;
-            this.coverPhoto = img;
-            this.smallCoverPhoto = this.resizeImage(img, 90, 150);
-            this.verySmallCoverPhoto = this.resizeImage(img, 50, 80);
+            this.coverPhoto = this.resizeImage(img, 182, 268);
+            this.smallCoverPhoto = this.resizeImage(img, 120, 175);
+            this.verySmallCoverPhoto = this.resizeImage(img, 90, 130);
             this.slug = Library.Utils.slugify(title + " " + year);
         }
         MovieModel.prototype.resizeImage = function (img, w, h) {
-            if (img && img != null)
+            if (img && img != null) {
+                console.log(img, w, h);
                 return img.replace("UX182", "UX" + w).replace(",182", "," + w).replace(",268", "," + h);
-            else
+            }
+            else {
                 return "http://placehold.it/" + w + "x" + h;
+            }
         };
         return MovieModel;
     }(DB.BaseModel));
@@ -930,7 +933,7 @@ var Controllers;
             };
             this.setQuoteOfTheDayTempalteData = function () {
                 var quoteOfTheDay = new DB.QuotesDB().getQuoteOfTheDay();
-                var movie = new DB.MoviesDB().get(quoteOfTheDay.movieSlug);
+                var movie = new DB.MoviesDB().getMovieOfTheDay();
                 IndexController.Templater.template("index--quote-of-the-day", {
                     "movie": {
                         "slug": quoteOfTheDay.movieSlug,

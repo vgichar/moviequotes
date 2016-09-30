@@ -6,9 +6,9 @@ module DB{
 			super(id);
 			this.title = title;
 			this.year = year;
-			this.coverPhoto = img;
-			this.smallCoverPhoto = this.resizeImage(img, 90, 150);
-			this.verySmallCoverPhoto = this.resizeImage(img, 50, 80);
+			this.coverPhoto = this.resizeImage(img, 182, 268);
+			this.smallCoverPhoto = this.resizeImage(img, 120, 175);
+			this.verySmallCoverPhoto = this.resizeImage(img, 90, 130);
 			this.slug = Library.Utils.slugify(title + " " + year);
 		}
 
@@ -20,10 +20,11 @@ module DB{
 		public slug: string;
 
 		private resizeImage(img, w, h){
-			if(img && img != null)
+			if(img && img != null){
 				return img.replace("UX182", "UX" + w).replace(",182", "," + w).replace(",268", "," + h)
-			else
+			}else{
 				return "http://placehold.it/" + w + "x" + h;
+			}
 		}
 	}
 

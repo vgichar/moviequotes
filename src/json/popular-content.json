@@ -7,32 +7,32 @@
                 "characterId": "nm0005466"
             }
         ],
-        "slug": "miss-jerry-1894"
+        "slug": "bosko-s-fox-hunt-1931"
     },
     "movie-of-the-day": {
-        "year": "1894",
-        "id": 9,
-        "img": "MV5BNjA5Y2ZhYzctNDc1Yy00OGViLWI3NGUtOTYwZmE3NDFiYmIxXkEyXkFqcGdeQXVyNTIzOTk5ODM@",
-        "title": "Miss Jerry"
+        "title": "Bosko's Fox Hunt",
+        "id": 21688,
+        "img": null,
+        "year": "1931"
     },
     "popular-movies": [
         {
-            "year": "1894",
-            "id": 9,
-            "img": "MV5BNjA5Y2ZhYzctNDc1Yy00OGViLWI3NGUtOTYwZmE3NDFiYmIxXkEyXkFqcGdeQXVyNTIzOTk5ODM@",
-            "title": "Miss Jerry"
-        },
-        {
-            "year": "1919",
-            "id": 10757,
+            "title": "Bosko's Fox Hunt",
+            "id": 21688,
             "img": null,
-            "title": "The Tantalizing Fly"
+            "year": "1931"
         },
         {
-            "title": "Windrider",
-            "id": 92220,
-            "img": "MV5BYzdlYmE3ZDgtZmMxMS00Njk4LWIyM2MtMWY2ZGE1MWUzMjM3XkEyXkFqcGdeQXVyMDgyNjA5MA@@",
-            "year": "1986"
+            "title": "Here Comes Carter",
+            "id": 25426,
+            "img": "https://images-na.ssl-images-amazon.com/images/M/MV5BOTljMjYxODEtYzdjZC00ZjM5LWIyZWMtMmEzYmRkNjE3YzAyXkEyXkFqcGdeQXVyMTYzNTE3NDA@._V1_UY98_CR30,0,67,98_AL_.jpg",
+            "year": "1936"
+        },
+        {
+            "title": "Female",
+            "id": 24008,
+            "img": "https://images-na.ssl-images-amazon.com/images/M/MV5BMTc5ODQzNzU3MF5BMl5BanBnXkFtZTcwOTY3ODEyMQ@@._V1_UX67_CR0,0,67,98_AL_.jpg",
+            "year": "1933"
         }
     ]
 }
