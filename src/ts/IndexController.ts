@@ -52,7 +52,7 @@ module Controllers{
 
 		private setQuoteOfTheDayTempalteData = () => {
 			let quoteOfTheDay = new DB.QuotesDB().getQuoteOfTheDay();
-			let movie = new DB.MoviesDB().get(quoteOfTheDay.movieSlug);
+			let movie = new DB.MoviesDB().getMovieOfTheDay();
 			
 			IndexController.Templater.template("index--quote-of-the-day", {
 				"movie": {
