@@ -2,9 +2,9 @@
 
 module Controllers{
 	export class IndexController{
-		public static Templater = new Library.Templater();
-		public static Router = new Library.Router();
-		public static Filer = Library.Filer.Current();
+		public static Templater: Library.Templater = new Library.Templater();
+		public static Router: Library.Router = new Library.Router();
+		public static Filer: Library.Filer = Library.Filer.Current();
 
 		public constructor(){
 			
@@ -20,20 +20,22 @@ module Controllers{
 		}
 
 		private preloadFiles = () => {
+			IndexController.Filer.registerBundle("json/bundles/views.json", [
+				"//viewsbundle",
+				"//viewsbundleend"
+			]);
+			IndexController.Filer.registerBundle("json/bundles/templates.json", [
+				"//templatesbundle",
+				"//templatesbundleend"
+			]);
+
 			IndexController.Filer.preloadFiles([
-				// views
-				"home.html",
-				"movies.html",
-				"movie-details.html",
-				// viewsend
-				// templaets
-				"templates/movie-details--list-quotes.html",
-				"templates/movies--browse.html",
-				"templates/movies--list.html",
-				"templates/home--popular-movies.html",
-				"templates/index--quote-of-the-day.html",
-				// templatesend
+				"//viewspreload",
+				"//viewspreloadend",
+				"//templatespreload",
+				"//templatespreloadend",
 				"json/movies.json",
+				"json/series.json",
 				"json/popular-content.json"
 			]);
 		}

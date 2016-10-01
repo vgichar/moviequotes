@@ -9,7 +9,7 @@ module DB{
 		}
 
 		public lines: string[];
-		public movieSlug: number;
+		public movieSlug: string;
 	}
 
 	export class QuotesDB extends BaseDB<QuoteModel>{
@@ -27,6 +27,16 @@ module DB{
 			let movieQuotes: any[] = movieQuotesObj.quotes;
 			let idx = 0;
 			return Enumerable.From(movieQuotes).Select(x => new QuoteModel(idx, x.lines, movieSlug));
+		}
+
+		public getByMovies (movieSlugs: string[]): linq.Enumerable<QuoteModel> {
+			let files = Enumerable.From(movieSlugs).Select(x => "json/movie-quotes/" + x + ".json").ToArray();
+			
+			let quotes: any = Enumerable.Empty();
+			for(let i in movieSlugs){
+				quotes = quotes.Concat(this.getByMovie(movieSlugs[i]));
+			}
+			return quotes;
 		}
 
 		public getQuoteOfTheDay (): QuoteModel {

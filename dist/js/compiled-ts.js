@@ -475,31 +475,60 @@ var Library;
         function Filer() {
             var _this = this;
             this.cache = {};
+            this.isDownloading = {};
+            this.bundles = {};
+            this.filesInBundle = {};
+            this.registerBundle = function (bundleName, fileNames) {
+                _this.bundles[bundleName] = fileNames;
+                for (var i in fileNames) {
+                    _this.filesInBundle[fileNames[i]] = bundleName;
+                }
+            };
             this.preloadFiles = function (files) {
                 var self = _this;
-                var _loop_2 = function(i) {
-                    $.get(files[i]).done(function (data) {
-                        self.cache[files[i]] = data;
-                    });
-                };
                 for (var i in files) {
-                    _loop_2(i);
+                    _this.downloadFile(files[i], true);
                 }
             };
             this.getFile = function (fileName) {
-                var self = _this;
-                if (!self.cache[fileName]) {
-                    $.ajax({
-                        method: "GET",
-                        url: fileName,
-                        async: false
-                    }).done(function (data) {
-                        self.cache[fileName] = data;
-                    });
-                }
-                return self.cache[fileName];
+                _this.downloadFile(fileName, false);
+                return _this.cache[fileName];
             };
         }
+        Filer.prototype.getFileContentLocation = function (fileName) {
+            return this.filesInBundle[fileName] ? this.filesInBundle[fileName] : fileName;
+        };
+        Filer.prototype.cacheFile = function (fileName, data) {
+            if (data === void 0) { data = undefined; }
+            this.cache[fileName] = data ? data : this.cache[fileName];
+            return this.cache[fileName];
+        };
+        Filer.prototype.downloadFile = function (fileName, async) {
+            if (async === void 0) { async = true; }
+            var or_bundleFile = this.getFileContentLocation(fileName);
+            var isBundle = or_bundleFile != fileName;
+            if (!this.cacheFile(fileName) && (!async || !this.isDownloading[or_bundleFile])) {
+                this.isDownloading[or_bundleFile] = true;
+                var self_1 = this;
+                return $.ajax({
+                    method: "GET",
+                    url: or_bundleFile,
+                    async: async
+                }).done(function (data) {
+                    if (!isBundle) {
+                        self_1.cacheFile(fileName, data);
+                    }
+                    else {
+                        self_1.processBundleToCache(data);
+                    }
+                });
+            }
+        };
+        Filer.prototype.processBundleToCache = function (data) {
+            for (var file in data) {
+                this.cacheFile(file, data[file]);
+            }
+        };
         Filer.Current = function () {
             if (!Filer._current) {
                 Filer._current = new Filer();
@@ -682,9 +711,16 @@ var Controllers;
         function HomeController() {
         }
         HomeController.beforeLoad = function (route, args) {
-            var movies = new DB.MoviesDB().getPopularMovies().ToArray();
+            var eMovies = new DB.MoviesDB().getPopularMovies();
+            var movieSlugs = eMovies.Select(function (x) { return x.slug; }).ToArray();
+            var movies = eMovies.ToArray();
+            var quotes = new DB.QuotesDB().getByMovies(movieSlugs).ToArray();
             for (var i in movies) {
-                movies[i]["quote"] = new DB.QuotesDB().getByMovie(movies[i].slug).First();
+                for (var j in quotes) {
+                    if (movies[i].slug == quotes[j].movieSlug) {
+                        movies[i]["quote"] = quotes[j];
+                    }
+                }
             }
             Controllers.IndexController.Templater.template("home--popular-movies", { movies: movies });
         };
@@ -779,7 +815,6 @@ var DB;
         }
         MovieModel.prototype.resizeImage = function (img, w, h) {
             if (img && img != null) {
-                console.log(img, w, h);
                 return img.replace("UX182", "UX" + w).replace(",182", "," + w).replace(",268", "," + h);
             }
             else {
@@ -857,6 +892,14 @@ var DB;
             var idx = 0;
             return Enumerable.From(movieQuotes).Select(function (x) { return new QuoteModel(idx, x.lines, movieSlug); });
         };
+        QuotesDB.prototype.getByMovies = function (movieSlugs) {
+            var files = Enumerable.From(movieSlugs).Select(function (x) { return "json/movie-quotes/" + x + ".json"; }).ToArray();
+            var quotes = Enumerable.Empty();
+            for (var i in movieSlugs) {
+                quotes = quotes.Concat(this.getByMovie(movieSlugs[i]));
+            }
+            return quotes;
+        };
         QuotesDB.prototype.getQuoteOfTheDay = function () {
             var content = this.getPopularContent();
             var quote = content['quote-of-the-day'];
@@ -904,20 +947,33 @@ var Controllers;
                 IndexController.Router.onLoaded(IndexController.Templater.work);
             };
             this.preloadFiles = function () {
-                IndexController.Filer.preloadFiles([
-                    // views
+                IndexController.Filer.registerBundle("json/bundles/views.json", [
                     "home.html",
-                    "movies.html",
-                    "movie-details.html",
-                    // viewsend
-                    // templaets
-                    "templates/movie-details--list-quotes.html",
-                    "templates/movies--browse.html",
-                    "templates/movies--list.html",
-                    "templates/home--popular-movies.html",
-                    "templates/index--quote-of-the-day.html",
-                    // templatesend
+"movie-details.html",
+"movies.html",
+
+                ]);
+                IndexController.Filer.registerBundle("json/bundles/templates.json", [
+                    "home--popular-movies.html",
+"index--quote-of-the-day.html",
+"movie-details--list-quotes.html",
+"movies--browse.html",
+"movies--list.html",
+
+                ]);
+                IndexController.Filer.preloadFiles([
+                    "home.html",
+"movie-details.html",
+"movies.html",
+
+                    "home--popular-movies.html",
+"index--quote-of-the-day.html",
+"movie-details--list-quotes.html",
+"movies--browse.html",
+"movies--list.html",
+
                     "json/movies.json",
+                    "json/series.json",
                     "json/popular-content.json"
                 ]);
             };

@@ -59,7 +59,8 @@ module DB{
 
 		public getPopularMovies (): linq.Enumerable<MovieModel> {
 			let content: any = this.getPopularContent();
-			let movies: any[] = content['popular-movies']
+			let movies: any[] = content['popular-movies'];
+
 			return Enumerable.From(movies).Select(x => new MovieModel(x.id, x.title, x.year, x.img));
 		}
 

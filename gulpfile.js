@@ -6,6 +6,9 @@ var imagemin = require("gulp-imagemin");
 var server = require('gulp-server-livereload');
 var autoprefixer = require('gulp-autoprefixer');
 var replace = require('gulp-replace');
+var uglify = require('gulp-uglify');
+var uglifycss = require('gulp-uglifycss');
+var fs = require('fs');
 
 var vendorScripts = [
 	'bower_components/bootstrap/dist/js/bootstrap.min.js',
@@ -18,17 +21,46 @@ var vendorStyles = [
   'bower_components/bootstrap/dist/css/bootstrap.min.css',
   'bower_components/bootstrap/dist/css/bootstrap-theme.min.css',
   'bower_components/semantic/dist/semantic.min.css',
-  'bower_components/font-awesome/css/font-awesome.min.css'
+  // 'bower_components/font-awesome/css/font-awesome.min.css'
 ];
 
 var vendorFonts = [
-  'bower_components/font-awesome/fonts/fontawesome-webfont.ttf',
-  'bower_components/font-awesome/fonts/fontawesome-webfont.woff',
-  'bower_components/font-awesome/fonts/fontawesome-webfont.woff2',
-  'bower_components/font-awesome/fonts/fontawesome-webfont.svg',
-  'bower_components/font-awesome/fonts/fontawesome-webfont.eot'
+  // 'bower_components/font-awesome/fonts/fontawesome-webfont.ttf',
+  // 'bower_components/font-awesome/fonts/fontawesome-webfont.woff',
+  // 'bower_components/font-awesome/fonts/fontawesome-webfont.woff2',
+  // 'bower_components/font-awesome/fonts/fontawesome-webfont.svg',
+  // 'bower_components/font-awesome/fonts/fontawesome-webfont.eot'
 ];
- 
+
+var tempaltesFolder = 'src/views/templates/'
+var viewsFolder = 'src/views/'
+var viewsBundleFile = 'src/json/bundles/views.json';
+var templatesBundleFile = 'src/json/bundles/templates.json';
+
+function getFiles(dir) {
+  return fs.readdirSync(dir)
+    .filter(function(file) {
+      return fs.statSync(dir + file).isFile();
+    });
+}
+
+function createBundle(dir, files, prefix) {
+  var bundle = {};
+  for(var i in files){
+    var content = fs.readFileSync(dir + files[i], {encoding : "UTF-8"});
+    bundle[prefix + files[i]] = content;
+  }
+  return bundle;
+}
+
+function toListPart(strings, prefix){
+  var str = "";
+  for(var i in strings){
+    str += "\"" + (prefix ? prefix : "") + strings[i] + "\",\n";
+  }
+  return str
+};
+
 gulp.task('serve', ['watch'], function() {
   gulp.src('dist')
     .pipe(server({
@@ -46,11 +78,30 @@ gulp.task("watch", ["build-fast"], function(){
     gulp.watch('src/index.html', ['copy-views']);
     gulp.watch('src/images/**', ['copy-images']);
     gulp.watch('src/**/*.js', ['copy-js']);
-    gulp.watch('src/json/*.json', ['copy-json-flat']);
+    gulp.watch(['src/json/*.json', 'src/json/bundles/*.json'], ['copy-json-fast']);
 });
 
-gulp.task("build-fast", ["build-sass", "build-typescript", "copy-views", "copy-images", "copy-static", "copy-vendor", "copy-js", "copy-json-flat"]);
-gulp.task("build", ["build-sass", "build-typescript", "copy-views", "copy-images", "copy-static", "copy-vendor", "copy-js", "copy-json"]);
+gulp.task("build", [
+  "build-ugly-sass", 
+  "build-ugly-typescript", 
+  "copy-views", 
+  "copy-images", 
+  "copy-static", 
+  "copy-vendor", 
+  "copy-js", 
+  "copy-json"
+]);
+
+gulp.task("build-fast", [
+  "build-sass", 
+  "build-typescript", 
+  "copy-views", 
+  "copy-images", 
+  "copy-static", 
+  "copy-vendor", 
+  "copy-js", 
+  "copy-json-fast"
+]);
 
 gulp.task("build-sass", function(){ 
     gulp.src('src/sass/style.scss')
@@ -62,11 +113,41 @@ gulp.task("build-sass", function(){
       .pipe(gulp.dest('dist/css/'));
 });
 
+gulp.task("build-ugly-sass", function(){ 
+    gulp.src('src/sass/style.scss')
+      .pipe(sassGlob())
+      .pipe(sass())
+      .pipe(autoprefixer({
+            browsers: ['> 1%']
+        }))
+      .pipe(uglifycss())
+      .pipe(gulp.dest('dist/css/'));
+});
+
 gulp.task("build-typescript", function(){
     gulp.src('src/ts/**/*')
         .pipe(ts({
-            out: 'compiled-ts.js'
+            out: 'compiled-ts.js',
+            removeComments: false
         }))
+        .pipe(replace(/"\/\/viewspreload",(.|\n|\r)*"\/\/viewspreloadend",*/g, toListPart(getFiles(viewsFolder))))
+        .pipe(replace(/"\/\/viewsbundle",(.|\n|\r)*"\/\/viewsbundleend",*/g, toListPart(getFiles(viewsFolder))))
+        .pipe(replace(/"\/\/templatespreload",(.|\n|\r)*"\/\/templatespreloadend",*/g, toListPart(getFiles(tempaltesFolder, "templates/"))))
+        .pipe(replace(/"\/\/templatesbundle",(.|\n|\r)*"\/\/templatesbundleend",*/g, toListPart(getFiles(tempaltesFolder, "templates/"))))
+        .pipe(gulp.dest('dist/js'))
+});
+
+gulp.task("build-ugly-typescript", function(){
+    gulp.src('src/ts/**/*')
+        .pipe(ts({
+            out: 'compiled-ts.js',
+            removeComments: false
+        }))
+        .pipe(replace(/"\/\/viewspreload",(.|\n|\r)*"\/\/viewspreloadend",*/g, toListPart(getFiles(viewsFolder))))
+        .pipe(replace(/"\/\/viewsbundle",(.|\n|\r)*"\/\/viewsbundleend",*/g, toListPart(getFiles(viewsFolder))))
+        .pipe(replace(/"\/\/templatespreload",(.|\n|\r)*"\/\/templatespreloadend",*/g, toListPart(getFiles(tempaltesFolder, "templates/"))))
+        .pipe(replace(/"\/\/templatesbundle",(.|\n|\r)*"\/\/templatesbundleend",*/g, toListPart(getFiles(tempaltesFolder, "templates/"))))
+        .pipe(uglify())
         .pipe(gulp.dest('dist/js'))
 });
 
@@ -83,14 +164,18 @@ gulp.task("copy-images", function(){
         .pipe(gulp.dest('dist/images'))
 });
 
-gulp.task("copy-json", function(){
-    gulp.src('src/json/**/*.json')
-        .pipe(gulp.dest('dist/json'))
+gulp.task("copy-json", ["copy-json-fast"], function(){
+    gulp.src('src/json/movie-quotes/*.json')
+        .pipe(gulp.dest('dist/json/movie-quotes'))
+    gulp.src('src/json/serie-quotes/*.json')
+        .pipe(gulp.dest('dist/json/serie-quotes'))
 });
 
-gulp.task("copy-json-flat", function(){
+gulp.task("copy-json-fast", ["preimport-views"], function(){
     gulp.src('src/json/*.json')
         .pipe(gulp.dest('dist/json'))
+    gulp.src('src/json/bundles/*.json')
+        .pipe(gulp.dest('dist/json/bundles'))
 });
 
 gulp.task("copy-static", function(){
@@ -108,9 +193,14 @@ gulp.task("copy-js", function(){
 });
 
 gulp.task('preimport-views', function(){
-  var indexTsFile = 'src/ts/index.ts';
-  var tempaltesFolder = 'src/views/templates/*.html'
-  var viewsFolder = 'src/views/*.html'
+  var views = getFiles(viewsFolder);
+  var templates = getFiles(tempaltesFolder);
+
+  var viewsBundle = createBundle(viewsFolder, views, "");
+  var templatesBundle = createBundle(tempaltesFolder, templates, "templates/");
+
+  fs.writeFileSync(viewsBundleFile, JSON.stringify(viewsBundle));
+  fs.writeFileSync(templatesBundleFile, JSON.stringify(templatesBundle));
 })
 
 gulp.task("copy-vendor", function(){
