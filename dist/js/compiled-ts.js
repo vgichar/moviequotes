@@ -711,10 +711,9 @@ var Controllers;
         function HomeController() {
         }
         HomeController.beforeLoad = function (route, args) {
-            var eMovies = new DB.MoviesDB().getPopularMovies();
-            var movieSlugs = eMovies.Select(function (x) { return x.slug; }).ToArray();
-            var movies = eMovies.ToArray();
-            var quotes = new DB.QuotesDB().getByMovies(movieSlugs).ToArray();
+            $("title").text("Movie Quotes - Popular movies");
+            var movies = new DB.MoviesDB().getPopularMovies().ToArray();
+            var quotes = new DB.QuotesDB().getPopularMovieQuotes().ToArray();
             for (var i in movies) {
                 for (var j in quotes) {
                     if (movies[i].slug == quotes[j].movieSlug) {
@@ -735,6 +734,7 @@ var Controllers;
         function MoviesController() {
         }
         MoviesController.beforeLoad = function (route, args) {
+            $("title").text("Movie Quotes - Browse movies");
             var start = args.start;
             var moviesDB = new DB.MoviesDB();
             if (start) {
@@ -764,6 +764,7 @@ var Controllers;
         MovieDetailsController.beforeLoad = function (route, args) {
             var movie = new DB.MoviesDB().get(args.id);
             var quotes = new DB.QuotesDB().getByMovie(args.id);
+            $("title").text("Movie Quotes - " + movie.title);
             Controllers.IndexController.Templater.template("movie-details--list-quotes", {
                 "movie": movie,
                 "quotes": quotes.ToArray()
@@ -894,11 +895,18 @@ var DB;
         };
         QuotesDB.prototype.getByMovies = function (movieSlugs) {
             var files = Enumerable.From(movieSlugs).Select(function (x) { return "json/movie-quotes/" + x + ".json"; }).ToArray();
-            var quotes = Enumerable.Empty();
+            var quotes = [];
             for (var i in movieSlugs) {
-                quotes = quotes.Concat(this.getByMovie(movieSlugs[i]));
+                var byMovie = this.getByMovie(movieSlugs[i]);
+                quotes.push(byMovie.First());
             }
-            return quotes;
+            return Enumerable.From(quotes);
+        };
+        QuotesDB.prototype.getPopularMovieQuotes = function () {
+            var content = this.getPopularContent();
+            var quotes = content['popular-movie-quotes'];
+            var id = 0;
+            return Enumerable.From(quotes).Select(function (x) { return new QuoteModel(id, x.lines, x.movieSlug); });
         };
         QuotesDB.prototype.getQuoteOfTheDay = function () {
             var content = this.getPopularContent();

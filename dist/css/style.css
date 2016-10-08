@@ -116,6 +116,7 @@ nav {
     padding-right: 20px;
     font-weight: bold;
     color: #919191;
+    font-size: large;
     transition: color .25s ease-in-out;
     -moz-transition: color .25s ease-in-out;
     -webkit-transition: color .25s ease-in-out; }
@@ -125,10 +126,10 @@ nav {
     display: table-cell;
     padding: 10px; }
     nav .menu-item.logo img {
-      width: 30px;
+      width: 40px;
       height: auto; }
 
-.popular-movies > a.movie-row {
+.popular-movies > .movie-row {
   display: block;
   border: 0;
   border-bottom: 1px solid #ccc;
@@ -140,15 +141,17 @@ nav {
   padding-top: 40px;
   -webkit-transition: background-color .25s ease-in-out;
   transition: background-color .25s ease-in-out; }
-  .popular-movies > a.movie-row:hover {
+  .popular-movies > .movie-row:hover {
     background-color: #ececec; }
-  .popular-movies > a.movie-row img {
+  .popular-movies > .movie-row img {
     width: auto; }
-  .popular-movies > a.movie-row p {
+  .popular-movies > .movie-row p {
     margin-top: 20px; }
-  .popular-movies > a.movie-row .social {
+  .popular-movies > .movie-row a {
+    text-decoration: underline; }
+  .popular-movies > .movie-row .social {
     float: right; }
-    .popular-movies > a.movie-row .social span {
+    .popular-movies > .movie-row .social span {
       font-size: small; }
 
 .quote-card {

@@ -1,1 +1,1 @@
-{"home.html":"<block name=\"home--popular-movies\"></block>","movie-details.html":"<block name=\"movie-details--list-quotes\"></block>","movies.html":"<h3>Movies</h3>\r\n<block name=\"movies--browse\"></block>\r\n<block name=\"movies--list\"></block>"}
+{"home.html":"<h1>Popular movies</h1>\r\n<block name=\"home--popular-movies\"></block>","movie-details.html":"<block name=\"movie-details--list-quotes\"></block>","movies.html":"<h3>Movies</h3>\r\n<block name=\"movies--browse\"></block>\r\n<block name=\"movies--list\"></block>"}

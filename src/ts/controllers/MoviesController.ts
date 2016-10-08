@@ -4,6 +4,7 @@ module Controllers{
 	export class MoviesController{
 
 		public static beforeLoad = (route, args) => {
+			$("title").text("Movie Quotes - Browse movies");
 			let start = args.start;
 			let moviesDB = new DB.MoviesDB();
 			if(start){

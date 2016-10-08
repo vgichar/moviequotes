@@ -32,11 +32,20 @@ module DB{
 		public getByMovies (movieSlugs: string[]): linq.Enumerable<QuoteModel> {
 			let files = Enumerable.From(movieSlugs).Select(x => "json/movie-quotes/" + x + ".json").ToArray();
 			
-			let quotes: any = Enumerable.Empty();
+			let quotes: QuoteModel[] = [];
 			for(let i in movieSlugs){
-				quotes = quotes.Concat(this.getByMovie(movieSlugs[i]));
+				let byMovie = this.getByMovie(movieSlugs[i]);
+				quotes.push(byMovie.First());
 			}
-			return quotes;
+
+			return Enumerable.From(quotes);
+		}
+
+		public getPopularMovieQuotes (): linq.Enumerable<QuoteModel> {
+			let content: any = this.getPopularContent();
+			let quotes: any[] = content['popular-movie-quotes'];
+			let id = 0;
+			return Enumerable.From(quotes).Select(x => new QuoteModel(id, x.lines, x.movieSlug));
 		}
 
 		public getQuoteOfTheDay (): QuoteModel {

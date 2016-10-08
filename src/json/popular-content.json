@@ -34,5 +34,42 @@
             "img": "https://images-na.ssl-images-amazon.com/images/M/MV5BMTc5ODQzNzU3MF5BMl5BanBnXkFtZTcwOTY3ODEyMQ@@._V1_UX67_CR0,0,67,98_AL_.jpg",
             "year": "1933"
         }
+    ],
+    "popular-movie-quotes": [
+        {
+            "lines": [
+                {
+                    "text": "[first lines]",
+                    "character": null,
+                    "characterId": null
+                },
+                {
+                    "text": "[to the fox]\nI'll get you!",
+                    "character": "Bosko",
+                    "characterId": "nm0561668"
+                }
+            ],
+            "movieSlug": "bosko-s-fox-hunt-1931"
+        },
+        {
+            "lines": [
+                {
+                    "text": "If anyone phones, tell em to come up and SUE me sometime!",
+                    "character": "Kent Carter",
+                    "characterId": "nm0018717"
+                }
+            ],
+            "movieSlug": "here-comes-carter-1936"
+        },
+        {
+            "lines": [
+                {
+                    "text": "I know for some women, men are a household necessity; myself, I'd rather have a canary.",
+                    "character": "Alison Drake",
+                    "characterId": "nm0154183"
+                }
+            ],
+            "movieSlug": "female-1933"
+        }
     ]
 }

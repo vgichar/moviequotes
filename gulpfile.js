@@ -151,7 +151,7 @@ gulp.task("build-ugly-typescript", function(){
         .pipe(gulp.dest('dist/js'))
 });
 
-gulp.task("copy-views", function(){
+gulp.task("copy-views", ['copy-json-fast'], function(){
     gulp.src('src/views/**/*')
         .pipe(gulp.dest('dist'))
     gulp.src('src/index.html')

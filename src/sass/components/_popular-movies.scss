@@ -1,5 +1,5 @@
 .popular-movies{
-	> a.movie-row {
+	> .movie-row {
 		display: block;
 		border: 0;
 		border-bottom: 1px solid #ccc;
@@ -23,6 +23,10 @@
 
 		p{
 			margin-top: 20px;
+		}
+
+		a{
+			text-decoration: underline;
 		}
 
 		.social{

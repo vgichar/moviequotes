@@ -1,8 +1,7 @@
 <template>
 	<div class="popular-movies">
-		<h3>Popular movies</h3>
 		{{for movie in movies}}
-			<a href="#!/movie-details/{{movie.slug}}" class="well row movie-row">
+			<div class="well row movie-row">
 				<div class="col-lg-2 col-sm-3">
 					<img src="{{movie.verySmallCoverPhoto}}" />
 				</div>
@@ -15,13 +14,16 @@
 							<br>
 						{{endfor}}
 					</p>
+					<a href="#!/movie-details/{{movie.slug}}">Read more...</a>
 					<div class="social">
 						<span>Like</span>
 						<span>Share</span>
-						<span>Tweet</span>
+						<span>
+							<a class="twitter-share-button" href="https://twitter.com/intent/tweet?text=Hello%20world">Tweet</a>
+						</span>
 					</div>
 				</div>
-			</a>
+			</div>
 		{{endfor}}
 	</div>
 </template>
