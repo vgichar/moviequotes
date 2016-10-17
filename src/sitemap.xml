@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-	<urlset
-      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<url>
+			<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"><url>
 	<loc>http://moviequotes.netlify.com/#!/movie-details/bosko-s-fox-hunt-1931</loc>
 	<lastmod>2016-10-17</lastmod>
 	<changefreq>monthly</changefreq>
@@ -85893,11 +85892,7 @@
 	<changefreq>monthly</changefreq>
 	<priority>0.8</priority>
 </url>
-</urlset><?xml version="1.0" encoding="UTF-8"?>
-				<urlset
-      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"><url>
+<url>
 	<loc>http://moviequotes.netlify.com/#!/serie-details/little-house-on-the-prairie-1974</loc>
 	<lastmod>2016-10-17</lastmod>
 	<changefreq>monthly</changefreq>
