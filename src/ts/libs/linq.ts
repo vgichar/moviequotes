@@ -10,7 +10,7 @@
 
 Enumerable = (function ()
 {
-    var Enumerable = function (getEnumerator)
+    var Enumerable: any = function (getEnumerator)
     {
         this.GetEnumerator = getEnumerator;
     }
@@ -2306,7 +2306,7 @@ Enumerable = (function ()
 
     // optimize array or arraylike object
 
-    var ArrayEnumerable = function (source)
+    var ArrayEnumerable: any = function (source)
     {
         this.source = source;
     }
@@ -2717,7 +2717,7 @@ Enumerable = (function ()
         }
     }
 
-    var Grouping = function (key, elements)
+    var Grouping: any = function (key, elements)
     {
         this.Key = function ()
         {
@@ -2731,3 +2731,5 @@ Enumerable = (function ()
     // out to global
     return Enumerable;
 })()
+
+declare var Enumerable;
