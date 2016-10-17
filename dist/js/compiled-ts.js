@@ -66,7 +66,8 @@ var Library;
             this.register = function (route, view, controller) {
                 if (controller === void 0) { controller = undefined; }
                 route = _this.prepRouteForQuerying(route);
-                _this.routeMap[route] = { view: view, controller: controller, route: route };
+                var ctrlInstance = new controller();
+                _this.routeMap[route] = { view: view, controller: ctrlInstance, route: route };
             };
             this.registerNotFound = function (view) {
                 _this.notFoundView = view;
@@ -137,7 +138,7 @@ var Library;
                     if (routeParts.length != keyParts.length) {
                         continue;
                     }
-                    var wildcardsMatch = key.match(new RegExp("{.*}", "g"));
+                    var wildcardsMatch = key.match(new RegExp("{((?!}).)*.}", "g"));
                     if (wildcardsMatch) {
                         var numOfWildcards = wildcardsMatch.length;
                         for (var i = 1; i < numOfWildcards + 1; i++) {
@@ -226,19 +227,21 @@ var Library;
                 var countLoaded = 0;
                 var shouldLoad = 0;
                 var _loop_1 = function(name_2) {
-                    shouldLoad++;
-                    var path = "templates/" + name_2 + ".html";
-                    Library.Utils.loadFile(path, function (data) {
-                        var elTemplateParent = document.createElement("div");
-                        elTemplateParent.innerHTML = data;
-                        var elTemplate = elTemplateParent.firstChild;
-                        document.body.appendChild(elTemplate);
-                        self.templates[name_2] = elTemplate;
-                        countLoaded++;
-                        if (shouldLoad == countLoaded) {
-                            onLoadAll();
-                        }
-                    }, undefined);
+                    if (!self.templates[name_2]) {
+                        shouldLoad++;
+                        var path = "templates/" + name_2 + ".html";
+                        Library.Utils.loadFile(path, function (data) {
+                            var elTemplateParent = document.createElement("div");
+                            elTemplateParent.innerHTML = data;
+                            var elTemplate = elTemplateParent.firstChild;
+                            document.body.appendChild(elTemplate);
+                            self.templates[name_2] = elTemplate;
+                            countLoaded++;
+                            if (shouldLoad == countLoaded) {
+                                onLoadAll();
+                            }
+                        }, undefined);
+                    }
                 };
                 for (var name_2 in _this.blocks) {
                     _loop_1(name_2);
@@ -253,14 +256,25 @@ var Library;
                 var self = _this;
                 for (var i in self.blocks) {
                     var name_3 = i;
-                    var elBlock = self.blocks[name_3];
-                    var elTemplate = self.templates[name_3];
-                    var templateData = self.templatesData[name_3];
-                    if (elBlock && elTemplate) {
-                        elTemplate.innerHTML = self.interpolate(elTemplate.innerHTML, templateData);
-                        self.replaceHtml(elBlock, elTemplate);
-                    }
+                    self.injectTemplate(name_3);
                 }
+            };
+            this.injectTemplate = function (name, force) {
+                if (force === void 0) { force = false; }
+                var self = _this;
+                var elBlock = self.blocks[name];
+                var elTemplate = self.templates[name];
+                var templateData = self.templatesData[name];
+                if (force == true) {
+                    elBlock.innerHTML = "";
+                }
+                if (elBlock && elTemplate && (elBlock.innerHTML.length <= 0 || force == true)) {
+                    var html = self.interpolate(elTemplate.innerHTML, templateData);
+                    self.replaceHtml(elBlock, html);
+                }
+            };
+            this.reloadTemplate = function (name) {
+                _this.injectTemplate(name, true);
             };
             this.interpolate = function (html, data) {
                 for (var j in _this.interpolationRules) {
@@ -268,27 +282,25 @@ var Library;
                 }
                 return html;
             };
-            this.replaceHtml = function (elBlock, elTemplate) {
+            this.replaceHtml = function (elBlock, html) {
                 var elTemplateSubstituteNode = document.createElement("div");
-                elTemplateSubstituteNode.innerHTML = elTemplate.innerHTML;
+                elTemplateSubstituteNode.innerHTML = html;
                 var nodes = elTemplateSubstituteNode.childNodes;
                 for (var i = 0; i < nodes.length; i++) {
                     var node = nodes[i];
                     if (node.nodeName == "SCRIPT") {
                         var scriptTag = document.createElement("script");
                         scriptTag.innerHTML = node.innerHTML;
-                        elBlock.parentElement.insertBefore(scriptTag, elBlock);
+                        elBlock.appendChild(scriptTag, elBlock);
                     }
                     else if (nodes[i].nodeName == "#text") {
                         var textNode = document.createTextNode(node.textContent);
-                        elBlock.parentElement.insertBefore(textNode, elBlock);
+                        elBlock.appendChild(textNode, elBlock);
                     }
                     else {
-                        elBlock.parentElement.insertBefore(node, elBlock);
+                        elBlock.appendChild(node, elBlock);
                     }
                 }
-                elBlock.remove();
-                elTemplate.remove();
             };
             this.bootstrap();
             DefaultInterpolationRules.init(this);
@@ -301,8 +313,8 @@ var Library;
         }
         DefaultInterpolationRules.init = function (templater) {
             DefaultInterpolationRules.templater = templater;
-            templater.addInterpolationRule(DefaultInterpolationRules.ifElseRule);
             templater.addInterpolationRule(DefaultInterpolationRules.foreachRule);
+            templater.addInterpolationRule(DefaultInterpolationRules.ifElseRule);
             templater.addInterpolationRule(DefaultInterpolationRules.renderFieldsRule);
             templater.addInterpolationRule(DefaultInterpolationRules.renderAnythingRule);
         };
@@ -690,7 +702,10 @@ var Library;
                 .toLowerCase()
                 .replace('\'', '-');
             return str.replace(/[^a-zA-Z0-9-\s]+/g, '')
-                .replace(/ +/g, '-');
+                .replace(/ +/g, '-')
+                .replace(new RegExp("^-"), "")
+                .replace(new RegExp("-$"), "")
+                .replace(new RegExp("--"), "-");
         };
         Utils.htmlEncode = function (str) {
             var el = document.createElement("div");
@@ -709,20 +724,20 @@ var Controllers;
 (function (Controllers) {
     var HomeController = (function () {
         function HomeController() {
-        }
-        HomeController.beforeLoad = function (route, args) {
-            $("title").text("Movie Quotes - Popular movies");
-            var movies = new DB.MoviesDB().getPopularMovies().ToArray();
-            var quotes = new DB.QuotesDB().getPopularMovieQuotes().ToArray();
-            for (var i in movies) {
-                for (var j in quotes) {
-                    if (movies[i].slug == quotes[j].movieSlug) {
-                        movies[i]["quote"] = quotes[j];
+            this.beforeLoad = function (route, args) {
+                $("title").text("Movie Quotes - Popular movies");
+                var movies = new DB.MoviesDB().getPopularMovies().ToArray();
+                var quotes = new DB.QuotesDB().getPopularMovieQuotes().ToArray();
+                for (var i in movies) {
+                    for (var j in quotes) {
+                        if (movies[i].slug == quotes[j].movieSlug) {
+                            movies[i]["quote"] = quotes[j];
+                        }
                     }
                 }
-            }
-            Controllers.IndexController.Templater.template("home--popular-movies", { movies: movies });
-        };
+                Controllers.IndexController.Templater.template("home--popular-movies", { movies: movies });
+            };
+        }
         return HomeController;
     }());
     Controllers.HomeController = HomeController;
@@ -730,46 +745,85 @@ var Controllers;
 /// <reference path="../_references.ts" />
 var Controllers;
 (function (Controllers) {
-    var MoviesController = (function () {
-        function MoviesController() {
+    var MoviesAndSeriesController = (function () {
+        function MoviesAndSeriesController() {
+            var _this = this;
+            this.filterCondition = undefined;
+            this.pageSize = 100;
+            this.page = 0;
+            this.beforeLoad = function (route, args) {
+                var self = _this;
+                self.db = new DB.MoviesDB();
+                $("#search").val('');
+                self.filterCondition = args.filter || "";
+                self.page = args.page ? parseInt(args.page) - 1 : 0;
+                self.page = Math.max(self.page, 0);
+                self.filter();
+                self.navigate();
+                $("title").text("Movie Quotes - Browse movies");
+            };
+            this.afterLoad = function (route, args) {
+                var self = _this;
+                var timeoutId = undefined;
+                $("#search").on("keyup", function () {
+                    clearTimeout(timeoutId);
+                    timeoutId = setTimeout(function () {
+                        self.filterCondition = $("#search").val();
+                        self.filter();
+                        self.navigate();
+                        Controllers.IndexController.Templater.reloadTemplate("movies--list");
+                        Controllers.IndexController.Templater.reloadTemplate("movies--browse");
+                    }, 300);
+                });
+            };
+            this.filter = function () {
+                var self = _this;
+                Controllers.IndexController.Templater.template("movies--list", {
+                    "movies": self.db.getByStart(self.filterCondition).OrderBy(function (x) { return x.title; }).Skip(self.page * self.pageSize).Take(self.pageSize).ToArray()
+                });
+            };
+            this.navigate = function () {
+                var self = _this;
+                var page = self.page;
+                var realPage = page + 1;
+                var pageCount = Math.ceil(self.db.getByStart(self.filterCondition).Count() / self.pageSize);
+                var pages = [];
+                var padding = 3;
+                for (var i = Math.max(1, realPage - padding); i <= Math.min(realPage + padding, pageCount); i++) {
+                    pages.push(i);
+                }
+                Controllers.IndexController.Templater.template("movies--browse", {
+                    "letters": Library.Utils
+                        .initArrayOrdered(26, 'A'.charCodeAt(0))
+                        .concat(Library.Utils.initArrayOrdered(10, '0'.charCodeAt(0))),
+                    "pages": pages,
+                    "pageNum": page,
+                    "pageCount": pageCount,
+                    "isPrevPadded": pages[0] != 1,
+                    "isNextPadded": pages[pages.length - 1] < pageCount,
+                    "filter": self.filterCondition
+                });
+            };
         }
-        MoviesController.beforeLoad = function (route, args) {
-            $("title").text("Movie Quotes - Browse movies");
-            var start = args.start;
-            var moviesDB = new DB.MoviesDB();
-            if (start) {
-                Controllers.IndexController.Templater.template("movies--list", {
-                    "movies": moviesDB.getByStart(start).Take(500).ToArray()
-                });
-            }
-            else {
-                Controllers.IndexController.Templater.template("movies--list", {
-                    "movies": moviesDB.take(0, 500).ToArray()
-                });
-            }
-            Controllers.IndexController.Templater.template("movies--browse", {
-                "letters": Library.Utils.initArrayOrdered(26, 'A'.charCodeAt(0)).concat(Library.Utils.initArrayOrdered(10, '0'.charCodeAt(0)))
-            });
-        };
-        return MoviesController;
+        return MoviesAndSeriesController;
     }());
-    Controllers.MoviesController = MoviesController;
+    Controllers.MoviesAndSeriesController = MoviesAndSeriesController;
 })(Controllers || (Controllers = {}));
 /// <reference path="../_references.ts" />
 var Controllers;
 (function (Controllers) {
     var MovieDetailsController = (function () {
         function MovieDetailsController() {
+            this.beforeLoad = function (route, args) {
+                var movie = new DB.MoviesDB().get(args.id);
+                var quotes = new DB.QuotesDB().getByMovie(args.id);
+                $("title").text("Movie Quotes - " + movie.title);
+                Controllers.IndexController.Templater.template("movie-details--list-quotes", {
+                    "movie": movie,
+                    "quotes": quotes.ToArray()
+                });
+            };
         }
-        MovieDetailsController.beforeLoad = function (route, args) {
-            var movie = new DB.MoviesDB().get(args.id);
-            var quotes = new DB.QuotesDB().getByMovie(args.id);
-            $("title").text("Movie Quotes - " + movie.title);
-            Controllers.IndexController.Templater.template("movie-details--list-quotes", {
-                "movie": movie,
-                "quotes": quotes.ToArray()
-            });
-        };
         return MovieDetailsController;
     }());
     Controllers.MovieDetailsController = MovieDetailsController;
@@ -834,8 +888,22 @@ var DB;
             return all;
         };
         MoviesDB.prototype.getByStart = function (str) {
-            str = str.toLowerCase();
-            return this.all().Where(function (x) { return x.title.toLowerCase().indexOf(str) == 0; });
+            if (str && str.length > 0) {
+                str = str.toLowerCase();
+                return this.all().Where(function (x) { return x.title.toLowerCase().indexOf(str) == 0; });
+            }
+            else {
+                return this.all();
+            }
+        };
+        MoviesDB.prototype.getByContains = function (str) {
+            if (str && str.length > 0) {
+                str = str.toLowerCase();
+                return this.all().Where(function (x) { return x.title.toLowerCase().indexOf(str) >= 0; });
+            }
+            else {
+                return this.all();
+            }
         };
         MoviesDB.prototype.take = function (offset, take) {
             return this.all().Skip(offset).Take(take);
@@ -865,6 +933,86 @@ var DB;
         return MoviesDB;
     }(DB.BaseDB));
     DB.MoviesDB = MoviesDB;
+})(DB || (DB = {}));
+/// <reference path="../_references.ts" />
+var DB;
+(function (DB) {
+    var SerieModel = (function (_super) {
+        __extends(SerieModel, _super);
+        function SerieModel(id, title, year, img) {
+            _super.call(this, id);
+            this.title = title;
+            this.year = year;
+            this.coverPhoto = this.resizeImage(img, 182, 268);
+            this.smallCoverPhoto = this.resizeImage(img, 120, 175);
+            this.verySmallCoverPhoto = this.resizeImage(img, 90, 130);
+            this.slug = Library.Utils.slugify(title + " " + year);
+        }
+        SerieModel.prototype.resizeImage = function (img, w, h) {
+            if (img && img != null) {
+                return img.replace("UX182", "UX" + w).replace(",182", "," + w).replace(",268", "," + h);
+            }
+            else {
+                return "http://placehold.it/" + w + "x" + h;
+            }
+        };
+        return SerieModel;
+    }(DB.BaseModel));
+    var SeriesDB = (function (_super) {
+        __extends(SeriesDB, _super);
+        function SeriesDB() {
+            _super.call(this, "json/series.json");
+        }
+        SeriesDB.prototype.all = function () {
+            var all = _super.prototype.all.call(this).Select(function (x) { return new SerieModel(x.id, x.title, x.year, x.img); });
+            return all;
+        };
+        SeriesDB.prototype.getByStart = function (str) {
+            if (str && str.length > 0) {
+                str = str.toLowerCase();
+                return this.all().Where(function (x) { return x.title.toLowerCase().indexOf(str) == 0; });
+            }
+            else {
+                return this.all();
+            }
+        };
+        SeriesDB.prototype.getByContains = function (str) {
+            if (str && str.length > 0) {
+                str = str.toLowerCase();
+                return this.all().Where(function (x) { return x.title.toLowerCase().indexOf(str) >= 0; });
+            }
+            else {
+                return this.all();
+            }
+        };
+        SeriesDB.prototype.take = function (offset, take) {
+            return this.all().Skip(offset).Take(take);
+        };
+        SeriesDB.prototype.get = function (slug) {
+            return this.all().Single(function (x) { return x.slug == slug; });
+        };
+        SeriesDB.prototype.getMovieOfTheDay = function () {
+            var content = this.getPopularContent();
+            var movie = content['serie-of-the-day'];
+            return new SerieModel(movie.id, movie.title, movie.year, movie.img);
+        };
+        SeriesDB.prototype.getPopularMovies = function () {
+            var content = this.getPopularContent();
+            var movies = content['popular-series'];
+            return Enumerable.From(movies).Select(function (x) { return new SerieModel(x.id, x.title, x.year, x.img); });
+        };
+        SeriesDB.prototype.getRandomMovie = function (notIn) {
+            if (notIn === void 0) { notIn = []; }
+            var notInEnum = Enumerable.From(notIn);
+            var notSeenMovies = this.all().Where(function (x) { return notInEnum.Any(function (y) { return y == x.slug; }); }).ToArray();
+            if (notSeenMovies.length == 0)
+                return undefined;
+            var hash = Library.Utils.hashCode(Library.Utils.now()) % notSeenMovies.length;
+            return this.get(notSeenMovies[hash].slug);
+        };
+        return SeriesDB;
+    }(DB.BaseDB));
+    DB.SeriesDB = SeriesDB;
 })(DB || (DB = {}));
 /// <reference path="../_references.ts" />
 var DB;
@@ -936,10 +1084,11 @@ var DB;
 /// <reference path="libs/utils.ts" />
 /// <reference path="IndexController.ts" />
 /// <reference path="controllers/HomeController.ts" />
-/// <reference path="controllers/MoviesController.ts" />
+/// <reference path="controllers/MoviesAndSeriesController.ts" />
 /// <reference path="controllers/MovieDetailsController.ts" />
 /// <reference path="db/BaseDB.ts" />
 /// <reference path="db/MoviesDB.ts" />
+/// <reference path="db/SeriesDB.ts" />
 /// <reference path="db/QuotesDB.ts" /> 
 /// <reference path="_references.ts" />
 var Controllers;
@@ -952,6 +1101,7 @@ var Controllers;
                 _this.registerRoutes();
                 _this.setQuoteOfTheDayTempalteData();
                 _this.makeMenuReactive();
+                _this.bootstrapSemanticComponents();
                 IndexController.Router.onLoaded(IndexController.Templater.work);
             };
             this.preloadFiles = function () {
@@ -959,6 +1109,7 @@ var Controllers;
                     "home.html",
 "movie-details.html",
 "movies.html",
+"series.html",
 
                 ]);
                 IndexController.Filer.registerBundle("json/bundles/templates.json", [
@@ -973,6 +1124,7 @@ var Controllers;
                     "home.html",
 "movie-details.html",
 "movies.html",
+"series.html",
 
                     "home--popular-movies.html",
 "index--quote-of-the-day.html",
@@ -992,8 +1144,12 @@ var Controllers;
                 IndexController.Router.registerNotFound("errors/404.html");
                 IndexController.Router.register("/", "home.html", Controllers.HomeController);
                 IndexController.Router.register("/movie-details/{id}", "movie-details.html", Controllers.MovieDetailsController);
-                IndexController.Router.register("/movies", "movies.html", Controllers.MoviesController);
-                IndexController.Router.register("/movies/{start}", "movies.html", Controllers.MoviesController);
+                IndexController.Router.register("/movies", "movies.html", Controllers.MoviesAndSeriesController);
+                IndexController.Router.register("/movies/{filter}", "movies.html", Controllers.MoviesAndSeriesController);
+                IndexController.Router.register("/movies/{filter}/{page}", "movies.html", Controllers.MoviesAndSeriesController);
+                IndexController.Router.register("/series", "series.html", Controllers.MoviesAndSeriesController);
+                IndexController.Router.register("/series/{filter}", "series.html", Controllers.MoviesAndSeriesController);
+                IndexController.Router.register("/series/{filter}/{page}", "series.html", Controllers.MoviesAndSeriesController);
             };
             this.setQuoteOfTheDayTempalteData = function () {
                 var quoteOfTheDay = new DB.QuotesDB().getQuoteOfTheDay();
@@ -1014,11 +1170,17 @@ var Controllers;
                 IndexController.Router.onLoading(function (route) {
                     $("nav a").removeClass("active");
                     if (route.length < 2) {
-                        $("nav a[href*='home']").addClass("active");
+                        $("nav a[href='home']").addClass("active");
                     }
                     else {
                         $("nav a[href*='" + route.split("/")[0] + "']").addClass("active");
                     }
+                });
+            };
+            this.bootstrapSemanticComponents = function () {
+                var $$ = $;
+                $("#search").on("click", function () {
+                    IndexController.Router.go("/movies/");
                 });
             };
         }

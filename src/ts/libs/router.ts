@@ -78,7 +78,8 @@ module Library{
 
 		public register = (route, view, controller = undefined) => {
 			route = this.prepRouteForQuerying(route);
-			this.routeMap[route] = {view : view, controller : controller, route: route };
+			let ctrlInstance = new controller();
+			this.routeMap[route] = {view : view, controller : ctrlInstance, route: route };
 		}
 
 		public registerNotFound = (view) => {
@@ -172,7 +173,7 @@ module Library{
 					continue;
 				}
 
-				let wildcardsMatch = key.match(new RegExp("{.*}", "g"));
+				let wildcardsMatch = key.match(new RegExp("{((?!}).)*.}", "g"));
 				if(wildcardsMatch){
 					let numOfWildcards = wildcardsMatch.length;
 

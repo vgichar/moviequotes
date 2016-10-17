@@ -71,20 +71,22 @@ module Library{
 			let countLoaded = 0;
 			let shouldLoad = 0;
 			for(let name in this.blocks){
-				shouldLoad++;
-				let path = "templates/" + name + ".html";
-				Library.Utils.loadFile(path, function(data){
-					let elTemplateParent = document.createElement("div");
-					elTemplateParent.innerHTML = data;
-					let elTemplate = elTemplateParent.firstChild;
-					document.body.appendChild(elTemplate);
-					self.templates[name] = elTemplate;
+				if(!self.templates[name]){
+					shouldLoad++;
+					let path = "templates/" + name + ".html";
+					Library.Utils.loadFile(path, function(data){
+						let elTemplateParent = document.createElement("div");
+						elTemplateParent.innerHTML = data;
+						let elTemplate = elTemplateParent.firstChild;
+						document.body.appendChild(elTemplate);
+						self.templates[name] = elTemplate;
 
-					countLoaded++;
-					if(shouldLoad == countLoaded){
-						onLoadAll();
-					}
-				}, undefined);
+						countLoaded++;
+						if(shouldLoad == countLoaded){
+							onLoadAll();
+						}
+					}, undefined);
+				}
 			}
 
 			if(shouldLoad == 0){
@@ -99,16 +101,28 @@ module Library{
 			let self = this;
 			for(let i in self.blocks){
 				let name = i;
-
-				let elBlock = self.blocks[name];
-				let elTemplate = self.templates[name];
-				let templateData = self.templatesData[name];
-
-				if(elBlock && elTemplate){
-					elTemplate.innerHTML = self.interpolate(elTemplate.innerHTML, templateData)
-					self.replaceHtml(elBlock, elTemplate);
-				}
+				self.injectTemplate(name);
 			}
+		}
+
+		private injectTemplate = (name, force = false) => {
+			let self = this;
+			let elBlock = self.blocks[name];
+			let elTemplate = self.templates[name];
+			let templateData = self.templatesData[name];
+
+			if(force == true){
+				elBlock.innerHTML = "";
+			}
+
+			if(elBlock && elTemplate && (elBlock.innerHTML.length <= 0 || force == true)){				
+				let html = self.interpolate(elTemplate.innerHTML, templateData)
+				self.replaceHtml(elBlock, html);
+			}
+		}
+
+		public reloadTemplate = (name) =>{
+			this.injectTemplate(name, true);
 		}
 
 		public interpolate = (html, data) => {
@@ -118,9 +132,9 @@ module Library{
 			return html;
 		}
 
-		private replaceHtml = (elBlock, elTemplate) => {
+		private replaceHtml = (elBlock, html) => {
 			let elTemplateSubstituteNode = document.createElement("div");
-			elTemplateSubstituteNode.innerHTML = elTemplate.innerHTML;
+			elTemplateSubstituteNode.innerHTML = html;
 
 			let nodes = elTemplateSubstituteNode.childNodes;
 
@@ -130,19 +144,17 @@ module Library{
 				{
 					let scriptTag = document.createElement("script");
 					scriptTag.innerHTML = node.innerHTML;
-					elBlock.parentElement.insertBefore(scriptTag, elBlock);
+					elBlock.appendChild(scriptTag, elBlock);
 				}
 				else if(nodes[i].nodeName == "#text"){
 					let textNode = document.createTextNode(node.textContent);
-					elBlock.parentElement.insertBefore(textNode, elBlock);
+					elBlock.appendChild(textNode, elBlock);
 				}
 				else
 				{
-					elBlock.parentElement.insertBefore(node, elBlock);
+					elBlock.appendChild(node, elBlock);
 				}
 			}
-			elBlock.remove();
-			elTemplate.remove();
 		}
 	}
 
@@ -152,8 +164,8 @@ module Library{
 
 		public static init = (templater) => {
 			DefaultInterpolationRules.templater = templater;
-			templater.addInterpolationRule(DefaultInterpolationRules.ifElseRule);
 			templater.addInterpolationRule(DefaultInterpolationRules.foreachRule);
+			templater.addInterpolationRule(DefaultInterpolationRules.ifElseRule);
 			templater.addInterpolationRule(DefaultInterpolationRules.renderFieldsRule);
 
 			templater.addInterpolationRule(DefaultInterpolationRules.renderAnythingRule);

@@ -161,7 +161,10 @@ module Library{
 		        .toLowerCase()
 		        .replace('\'','-');
 		    return str.replace(/[^a-zA-Z0-9-\s]+/g,'')
-		        .replace(/ +/g,'-');
+		        .replace(/ +/g,'-')
+		        .replace(new RegExp("^-"), "")
+		        .replace(new RegExp("-$"), "")
+		        .replace(new RegExp("--"), "-");
 		}
 
 		public static htmlEncode = (str: string) => {

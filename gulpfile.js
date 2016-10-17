@@ -20,7 +20,7 @@ var vendorScripts = [
 var vendorStyles = [
   'bower_components/bootstrap/dist/css/bootstrap.min.css',
   'bower_components/bootstrap/dist/css/bootstrap-theme.min.css',
-  'bower_components/semantic/dist/semantic.min.css',
+  'bower_components/semantic/dist/**',
   // 'bower_components/font-awesome/css/font-awesome.min.css'
 ];
 

@@ -3,7 +3,7 @@
 module Controllers{
 	export class HomeController{
 
-		public static beforeLoad = (route, args) => {
+		public beforeLoad = (route, args) => {
 			$("title").text("Movie Quotes - Popular movies");
 			
 			let movies = new DB.MoviesDB().getPopularMovies().ToArray();

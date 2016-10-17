@@ -1,10 +1,69 @@
 <template>
-	<a href="#!/movies">
-		All
-	</a>
-	{{for letter in letters}}
-		<a href="#!/movies/{{String.fromCharCode(letter).toLowerCase()}}">
-			{{String.fromCharCode(letter)}}
+	<div>
+		<a href="#!/movies" class="m-underlined m-mar-1">
+			All
 		</a>
-	{{endfor}}
+		{{for letter in letters}}
+			<a href="#!/movies/{{String.fromCharCode(letter).toLowerCase()}}" class="m-underlined m-mar-1">
+				{{String.fromCharCode(letter)}}
+			</a>
+		{{endfor}}
+	</div>
+	<div class="ui pagination menu">
+		{{if pageNum > 0}}
+			<a href="#!/movies/{{filter}}/0" class="item">
+				&lt;&lt;
+			</a>
+			<a href="#!/movies/{{filter}}/{{pageNum}}" class="item">
+				&lt;
+			</a>
+		{{else}}
+			<div class="disabled item">
+				&lt;&lt;
+			</div>
+			<div class="disabled item">
+				&lt;
+			</div>
+		{{endif}}
+
+		{{if isPrevPadded}}
+			<div class="disabled item">
+				...
+			</div>
+		{{endif}}
+		
+		{{for pn in pages}}
+			{{if pn == pageNum + 1}}
+				<a href="#!/movies/{{filter}}/{{pn}}" class="active item">
+					{{pn}}
+				</a>
+			{{else}}
+				<a href="#!/movies/{{filter}}/{{pn}}" class="item">
+					{{pn}}
+				</a>
+			{{endif}}
+		{{endfor}}
+
+		{{if isNextPadded}}
+			<div class="disabled item">
+				...
+			</div>
+		{{endif}}
+
+		{{if pageNum < pageCount - 1}}
+			<a href="#!/movies/{{filter}}/{{pageNum + 2}}" class="item">
+				&gt;
+			</a>
+			<a href="#!/movies/{{filter}}/{{pageCount}}" class="item">
+				&gt;&gt;
+			</a>
+		{{else}}
+			<div class="disabled item">
+				&gt;
+			</div>
+			<div class="disabled item">
+				&gt;&gt;
+			</div>
+		{{endif}}
+	</div>
 </template>

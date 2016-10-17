@@ -39,8 +39,21 @@ module DB{
 		}
 
 		public getByStart(str: string): linq.Enumerable<MovieModel> {
-			str = str.toLowerCase();
-			return this.all().Where(x => x.title.toLowerCase().indexOf(str) == 0);
+			if(str && str.length > 0){
+				str = str.toLowerCase();
+				return this.all().Where(x => x.title.toLowerCase().indexOf(str) == 0);
+			}else{
+				return this.all();
+			}
+		}
+
+		public getByContains(str: string): linq.Enumerable<MovieModel> {
+			if(str && str.length > 0){
+				str = str.toLowerCase();
+				return this.all().Where(x => x.title.toLowerCase().indexOf(str) >= 0);
+			}else{
+				return this.all();
+			}
 		}
 
 		public take (offset, take): linq.Enumerable<MovieModel> {

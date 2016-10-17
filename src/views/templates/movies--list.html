@@ -1,9 +1,10 @@
 <template>
 	<div class="movies">
 		{{for movie in movies}}
-			<div>
+			<div class="m-txt-large m-pad-1 m-mar-1">
 				<a href="#!/movie-details/{{movie.slug}}">
-					{{movie.title}}
+					<span>{{movie.title}}</span> 
+					<span class="pull-right">({{movie.year}})</span>
 				</a>
 			</div>
 		{{endfor}}

@@ -1,0 +1,39 @@
+.m-underlined{
+	text-decoration: underline;
+}
+
+.m-txt-large{
+  font-size: large;
+}
+
+ul.m-list-none{
+  list-style-type: none;
+
+  li{
+    display: inline;
+  }
+}
+
+
+$positions: "left", "right", "top", "bottom";
+$spaces: 0, 1, 5, 10, 15, 30, 50, 70, 100, 130, 160, 200;
+
+@each $position in $positions {
+  @each $space in $spaces {
+    .m-pad-#{$position}-#{$space} {
+      padding-#{$position}: #{$space}px;
+    }
+    .m-mar-#{$position}-#{$space} {
+      margin-#{$position}: #{$space}px;
+    }
+  }
+}
+
+@each $space in $spaces {
+	.m-pad-#{$space} {
+	  padding: #{$space}px;
+	}
+	.m-mar-#{$space} {
+	  margin: #{$space}px;
+	}
+}

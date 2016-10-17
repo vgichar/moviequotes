@@ -15,6 +15,9 @@ module Controllers{
 			this.registerRoutes();
 			this.setQuoteOfTheDayTempalteData();
 			this.makeMenuReactive();
+			this.bootstrapSemanticComponents();
+
+
 
 			IndexController.Router.onLoaded(IndexController.Templater.work);
 		}
@@ -48,8 +51,13 @@ module Controllers{
 
 			IndexController.Router.register("/", "home.html", HomeController);
 			IndexController.Router.register("/movie-details/{id}", "movie-details.html", MovieDetailsController);
-			IndexController.Router.register("/movies", "movies.html", MoviesController);
-			IndexController.Router.register("/movies/{start}", "movies.html", MoviesController);
+			IndexController.Router.register("/movies", "movies.html", MoviesAndSeriesController);
+			IndexController.Router.register("/movies/{filter}", "movies.html", MoviesAndSeriesController);
+			IndexController.Router.register("/movies/{filter}/{page}", "movies.html", MoviesAndSeriesController);
+			
+			IndexController.Router.register("/series", "series.html", MoviesAndSeriesController);
+			IndexController.Router.register("/series/{filter}", "series.html", MoviesAndSeriesController);
+			IndexController.Router.register("/series/{filter}/{page}", "series.html", MoviesAndSeriesController);
 		}
 
 		private setQuoteOfTheDayTempalteData = () => {
@@ -73,10 +81,17 @@ module Controllers{
 			IndexController.Router.onLoading(function (route) {
 				$("nav a").removeClass("active");
 				if(route.length < 2){
-					$("nav a[href*='home']").addClass("active");
+					$("nav a[href='home']").addClass("active");
 				}else{
 					$("nav a[href*='" + route.split("/")[0] + "']").addClass("active");
 				}
+			});
+		}
+
+		private bootstrapSemanticComponents = () => {
+			let $$:any = $;
+			$("#search").on("click", function () {
+				IndexController.Router.go("/movies/");
 			});
 		}
 	}

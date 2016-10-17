@@ -3,7 +3,7 @@
 module Controllers{
 	export class MovieDetailsController{
 
-		public static beforeLoad = (route, args) => {
+		public beforeLoad = (route, args) => {
 			let movie = new DB.MoviesDB().get(args.id);
 			let quotes = new DB.QuotesDB().getByMovie(args.id);
 
