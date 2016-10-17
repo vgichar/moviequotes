@@ -1,20 +1,23 @@
 <template>
 	<div class="popular-movies">
 		{{for movie in movies}}
-			<div class="well row movie-row">
+			<div itemscope itemtype="http://schema.org/Movie" class="well row movie-row">
 				<div class="col-lg-2 col-sm-3">
-					<img src="{{movie.verySmallCoverPhoto}}" />
+					<img itemprop="image" src="{{movie.verySmallCoverPhoto}}" />
 				</div>
 				<div class="col-lg-10 col-sm-9">
-					<h3>{{movie.title}}</h3>
-					<p>
+					<h3 itemprop="name">
+						{{movie.title}}
+						(<span>{{movie.year}}</span>)
+					</h3>
+					<p itemprop="quote">
 						{{for line in movie.quote.lines}}
 							<strong>{{line.character != undefined ? line.character + ": " : ""}}</strong>
 							<span>{{line.text}}</span>
 							<br>
 						{{endfor}}
 					</p>
-					<a href="#!/movie-details/{{movie.slug}}">Read more...</a>
+					<a itemprop="url" href="#!/movie-details/{{movie.slug}}">Read more...</a>
 					<div class="social">
 						<span>Like</span>
 						<span>Share</span>

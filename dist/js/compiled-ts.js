@@ -1154,12 +1154,9 @@ var Controllers;
             this.setQuoteOfTheDayTempalteData = function () {
                 var quoteOfTheDay = new DB.QuotesDB().getQuoteOfTheDay();
                 var movie = new DB.MoviesDB().getMovieOfTheDay();
+                movie.slug = quoteOfTheDay.movieSlug;
                 IndexController.Templater.template("index--quote-of-the-day", {
-                    "movie": {
-                        "slug": quoteOfTheDay.movieSlug,
-                        "name": movie.title,
-                        "coverPhoto": movie.coverPhoto
-                    },
+                    "movie": movie,
                     "quote": {
                         "lines": quoteOfTheDay.lines,
                         "likes": parseInt((Math.random() * 100000).toString())

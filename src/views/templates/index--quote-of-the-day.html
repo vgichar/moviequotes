@@ -1,7 +1,12 @@
 <template>
 	<div class="quote-card">
 		<h3>Quote of the day</h3>
-		<strong><a href="#!/movie-details/{{movie.slug}}">{{movie.name}}</a></strong>
+		<strong>
+			<a href="#!/movie-details/{{movie.slug}}">
+				{{movie.title}}
+				(<span>{{movie.year}}</span>)
+			</a>
+		</strong>
 		<div>
 			<a href="#!/movie-details/{{movie.slug}}">
 				<img src="{{movie.coverPhoto}}">
