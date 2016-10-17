@@ -1,23 +1,25 @@
 <template>
-	<h1>
-		{{movie.title}} 
-		(<span>{{movie.year}}</span>)
-	</h1>
-	<img src="{{movie.coverPhoto}}">
-	{{for quote in quotes}}
-		<h3>Quote {{$index1}}</h3>
-		{{for line in quote.lines}}
-			<div>
-				<strong>{{line.character ? line.character + ": " : ""}}</strong>
-				{{line.text}}
+	<div itemscope itemtype="http://schema.org/Movie">
+		<h1>
+			<span itemprop="name">{{movie.title}}</span>
+			(<span>{{movie.year}}</span>)
+		</h1>
+		<img itemprop="image" src="{{movie.coverPhoto}}">
+		{{for quote in quotes}}
+			<h3>Quote {{$index1}}</h3>
+			{{for line in quote.lines}}
+				<div>
+					<strong>{{line.character ? line.character + ": " : ""}}</strong>
+					{{line.text}}
+				</div>
+			{{endfor}}
+			
+			<div class="social">
+				<span>Like</span>
+				<span>Share</span>
+				<span>Tweet</span>
 			</div>
+			<hr>
 		{{endfor}}
-		
-		<div class="social">
-			<span>Like</span>
-			<span>Share</span>
-			<span>Tweet</span>
-		</div>
-		<hr>
-	{{endfor}}
+	</div>
 </template>

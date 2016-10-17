@@ -1,9 +1,9 @@
 <template>
 	<div class="movies">
 		{{for movie in movies}}
-			<div class="m-txt-large m-pad-1 m-mar-1">
-				<a href="#!/movie-details/{{movie.slug}}">
-					<span>{{movie.title}}</span> 
+			<div class="m-txt-large m-pad-1 m-mar-1" itemscope itemtype="http://schema.org/Movie">
+				<a href="#!/movie-details/{{movie.slug}}" itemprop="url">
+					<span itemprop="name">{{movie.title}}</span> 
 					<span class="pull-right">(<span>{{movie.year}}</span>)</span>
 				</a>
 			</div>

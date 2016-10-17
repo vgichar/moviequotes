@@ -1,20 +1,20 @@
 <template>
-	<div class="quote-card">
+	<div class="quote-card" itemscope itemtype="http://schema.org/Movie">
 		<h3>Quote of the day</h3>
 		<strong>
-			<a href="#!/movie-details/{{movie.slug}}">
-				{{movie.title}}
+			<a href="#!/movie-details/{{movie.slug}}" itemprop="url">
+				<span itemprop="name">{{movie.title}}</span>
 				(<span>{{movie.year}}</span>)
 			</a>
 		</strong>
 		<div>
 			<a href="#!/movie-details/{{movie.slug}}">
-				<img src="{{movie.coverPhoto}}">
+				<img itemprop="image" src="{{movie.coverPhoto}}">
 			</a>
 		</div>
 		<br>
 		<p>
-			<a href="#!/movie-details/{{movie.slug}}">
+			<a href="#!/movie-details/{{movie.slug}}" itemprop="url">
 				{{for line in quote.lines}}
 					{{line.text}}<br>
 				{{endfor}}

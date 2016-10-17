@@ -6,11 +6,11 @@
 					<img itemprop="image" src="{{movie.verySmallCoverPhoto}}" />
 				</div>
 				<div class="col-lg-10 col-sm-9">
-					<h3 itemprop="name">
-						{{movie.title}}
+					<h3>
+						<span itemprop="name">{{movie.title}}</span>
 						(<span>{{movie.year}}</span>)
 					</h3>
-					<p itemprop="quote">
+					<p>
 						{{for line in movie.quote.lines}}
 							<strong>{{line.character != undefined ? line.character + ": " : ""}}</strong>
 							<span>{{line.text}}</span>
