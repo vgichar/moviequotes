@@ -8,7 +8,7 @@ var autoprefixer = require('gulp-autoprefixer');
 var replace = require('gulp-replace');
 var uglify = require('gulp-uglify');
 var uglifycss = require('gulp-uglifycss');
-var parse = require('gulp-parse');
+var parse = require('./node_modules/gulp-parse');
 var fs = require('fs');
 
 var vendorScripts = [
