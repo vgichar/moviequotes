@@ -2,6 +2,3 @@
 /bower_components
 /node_modules
 /dist
-
-# Allow
-!/node_modules/gulp-parse
