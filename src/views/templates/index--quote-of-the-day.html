@@ -15,9 +15,9 @@
 		<br>
 		<p>
 			<a href="#!/movie-details/{{movie.slug}}" itemprop="url">
-				{{for line in quote.lines}}
-					{{line.text}}<br>
-				{{endfor}}
+				{%for(var line in quote.lines){%}
+					{{quote.lines[line].text}}<br>
+				{%}%}
 			</a>
 		</p>
 		<div>{{quote.likes}} Liked this</div>

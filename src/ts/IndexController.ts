@@ -17,30 +17,23 @@ module Controllers{
 			this.makeMenuReactive();
 			this.bootstrapSemanticComponents();
 
-
-
-			IndexController.Router.onLoaded(IndexController.Templater.work);
+			IndexController.Router.onLoaded(IndexController.Templater.render);
 		}
 
 		private preloadFiles = () => {
-			IndexController.Filer.registerBundle("json/bundles/views.json", [
-				"//viewsbundle",
-				"//viewsbundleend"
-			]);
-			IndexController.Filer.registerBundle("json/bundles/templates.json", [
-				"//templatesbundle",
-				"//templatesbundleend"
-			]);
+			let bundles: any[] = IndexController.Filer.getFile('bundles.json');
+			let items: string[] = [];
 
-			IndexController.Filer.preloadFiles([
-				"//viewspreload",
-				"//viewspreloadend",
-				"//templatespreload",
-				"//templatespreloadend",
+			for (var i = bundles.length - 1; i >= 0; i--) {
+				items = items.concat(bundles[i].items);
+				IndexController.Filer.registerBundle(bundles[i].templateFile, bundles[i].items);
+			}
+			
+			IndexController.Filer.preloadFiles(items.concat([
 				"json/movies.json",
 				"json/series.json",
 				"json/popular-content.json"
-			]);
+			]));
 		}
 
 		private registerRoutes = () => {
@@ -58,6 +51,7 @@ module Controllers{
 			IndexController.Router.register("/series", "series.html", MoviesAndSeriesController);
 			IndexController.Router.register("/series/{filter}", "series.html", MoviesAndSeriesController);
 			IndexController.Router.register("/series/{filter}/{page}", "series.html", MoviesAndSeriesController);
+			IndexController.Router.register("/quiz", "quiz.html", QuizController);
 		}
 
 		private setQuoteOfTheDayTempalteData = () => {
@@ -66,7 +60,7 @@ module Controllers{
 
 			movie.slug = quoteOfTheDay.movieSlug;
 			
-			IndexController.Templater.template("index--quote-of-the-day", {
+			IndexController.Templater.template("templates/index--quote-of-the-day", {
 				"movie": movie,
 				"quote": {
 					"lines": quoteOfTheDay.lines,

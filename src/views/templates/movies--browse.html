@@ -3,67 +3,67 @@
 		<a href="#!/movies" class="m-underlined m-mar-1">
 			All
 		</a>
-		{{for letter in letters}}
-			<a href="#!/movies/{{String.fromCharCode(letter).toLowerCase()}}" class="m-underlined m-mar-1">
-				{{String.fromCharCode(letter)}}
+		{%for (i in letters){%}
+			<a href="#!/movies/{{String.fromCharCode(letters[i]).toLowerCase()}}" class="m-underlined m-mar-1">
+				{{String.fromCharCode(letters[i])}}
 			</a>
-		{{endfor}}
+		{%}%}
 	</div>
 	<div class="ui pagination menu">
-		{{if pageNum > 0}}
-			<a href="#!/movies/{{filter}}/0" class="item">
+		{%if (pageNum > 0){%}
+			<a href="#!/movies/{{filter}}/1" class="item">
 				&lt;&lt;
 			</a>
 			<a href="#!/movies/{{filter}}/{{pageNum}}" class="item">
 				&lt;
 			</a>
-		{{else}}
+		{%}else{%}
 			<div class="disabled item">
 				&lt;&lt;
 			</div>
 			<div class="disabled item">
 				&lt;
 			</div>
-		{{endif}}
+		{%}%}
 
-		{{if isPrevPadded}}
+		{%if (isPrevPadded){%}
 			<div class="disabled item">
 				...
 			</div>
-		{{endif}}
+		{%}%}
 		
-		{{for pn in pages}}
-			{{if pn == pageNum + 1}}
-				<a href="#!/movies/{{filter}}/{{pn}}" class="active item">
-					{{pn}}
+		{%for (pn in pages){%}
+			{%if (pages[pn] == pageNum + 1){%}
+				<a href="#!/movies/{{filter}}/{{pages[pn]}}" class="active item">
+					{{pages[pn]}}
 				</a>
-			{{else}}
-				<a href="#!/movies/{{filter}}/{{pn}}" class="item">
-					{{pn}}
+			{%}else{%}
+				<a href="#!/movies/{{filter}}/{{pages[pn]}}" class="item">
+					{{pages[pn]}}
 				</a>
-			{{endif}}
-		{{endfor}}
+			{%}%}
+		{%}%}
 
-		{{if isNextPadded}}
+		{%if (isNextPadded){%}
 			<div class="disabled item">
 				...
 			</div>
-		{{endif}}
+		{%}%}
 
-		{{if pageNum < pageCount - 1}}
-			<a href="#!/movies/{{filter}}/{{pageNum + 2}}" class="item">
+		{%if (pageNum < pageCount - 1){%}
+			<a href="#!/movies/{{filter}}/{{(pageNum + 2)}}" class="item">
 				&gt;
 			</a>
 			<a href="#!/movies/{{filter}}/{{pageCount}}" class="item">
 				&gt;&gt;
 			</a>
-		{{else}}
+		{%}else{%}
 			<div class="disabled item">
 				&gt;
 			</div>
 			<div class="disabled item">
 				&gt;&gt;
 			</div>
-		{{endif}}
+		{%}%}
 	</div>
 </template>

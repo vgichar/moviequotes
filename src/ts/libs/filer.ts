@@ -8,28 +8,28 @@ module Library{
 		private filesInBundle = {};
 
 		private static _current;
-		public static Current = (): Filer => {
+		public static Current(): Filer{
 			if(!Filer._current){
 				Filer._current = new Filer();
 			}
 			return Filer._current;
 		};
 
-		public registerBundle = (bundleName: string, fileNames: string[]) => {
+		public registerBundle(bundleName: string, fileNames: string[]){
 			this.bundles[bundleName] = fileNames;
 			for(let i in fileNames){
 				this.filesInBundle[fileNames[i]] = bundleName;
 			}
 		}
 
-		public preloadFiles = (files) => {
+		public preloadFiles(files){
 			let self = this;
 			for(let i in files){
 				this.downloadFile(files[i], true);
 			}
 		}
 
-		public getFile = (fileName) => {
+		public getFile(fileName){
 			this.downloadFile(fileName, false);
 
 			return this.cache[fileName];

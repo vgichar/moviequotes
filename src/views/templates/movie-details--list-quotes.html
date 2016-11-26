@@ -5,14 +5,15 @@
 			(<span>{{movie.year}}</span>)
 		</h1>
 		<img itemprop="image" src="{{movie.coverPhoto}}">
-		{{for quote in quotes}}
-			<h3>Quote {{$index1}}</h3>
-			{{for line in quote.lines}}
+		{%for (i in quotes){%}
+			<h3>Quote {{(parseInt(i)+1)}}</h3>
+			{%for (j in quotes[i].lines){%}
+			{%var line = quotes[i].lines[j];%}
 				<div>
-					<strong>{{line.character ? line.character + ": " : ""}}</strong>
+					<strong>{{line.character ? line.character + ': ' : ''}}</strong>
 					{{line.text}}
 				</div>
-			{{endfor}}
+			{%}%}
 			
 			<div class="social">
 				<span>Like</span>
@@ -20,6 +21,6 @@
 				<span>Tweet</span>
 			</div>
 			<hr>
-		{{endfor}}
+		{%}%}
 	</div>
 </template>

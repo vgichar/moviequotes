@@ -1,7 +1,7 @@
 /// <reference path="../_references.ts" />
 
 module Controllers{
-	export class MoviesAndSeriesController{
+	export class MoviesAndSeriesController extends BaseController{
 		private filterCondition = undefined;
 		private pageSize = 100;
 		private page = 0
@@ -34,15 +34,15 @@ module Controllers{
 					self.filter();
 					self.navigate();
 
-					IndexController.Templater.reloadTemplate("movies--list");
-					IndexController.Templater.reloadTemplate("movies--browse");
+					self.Templater.reloadTemplate("templates/movies--list");
+					self.Templater.reloadTemplate("templates/movies--browse");
 				}, 300)
 			});
 		}
 
 		private filter = () => {
 			let self = this;
-			IndexController.Templater.template("movies--list", {
+			self.Templater.template("templates/movies--list", {
 				"movies": self.db.getByStart(self.filterCondition).OrderBy(x => x.title).Skip(self.page * self.pageSize).Take(self.pageSize).ToArray()
 			});
 		}
@@ -60,7 +60,7 @@ module Controllers{
 				pages.push(i);
 			}
 
-			IndexController.Templater.template("movies--browse", {
+			self.Templater.template("templates/movies--browse", {
 				"letters": Library.Utils
 					.initArrayOrdered(26, 'A'.charCodeAt(0))
 					.concat(Library.Utils.initArrayOrdered(10, '0'.charCodeAt(0))),

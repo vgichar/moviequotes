@@ -14,7 +14,7 @@ module Library{
 			this.bootstrap();
 		}
 
-		private bootstrap = () => {
+		private bootstrap(){
 			let self = this;
 
 			$(window).on("load hashchange", function(){
@@ -37,8 +37,11 @@ module Library{
 					self.onLoadingCallbacks[i](route);
 				}
 
-				Library.Utils.loadFile(view, function(childViewHtml){
-					if(entry.controller && entry.controller.beforeLoad){
+
+				let childViewHtml = Library.Filer.Current().getFile(view);
+				if(childViewHtml){
+					childViewHtml = eval(childViewHtml);
+					if(entry && entry.controller && entry.controller.beforeLoad){
 						entry.controller.beforeLoad(route, args);
 					}
 
@@ -55,50 +58,49 @@ module Library{
 						self.onLoadedCallbacks[i](route);
 					}
 
-					if(entry.controller && entry.controller.afterLoad){
+					if(entry && entry.controller && entry.controller.afterLoad){
 						entry.controller.afterLoad(route, args);
 					}
-				}, function(){
-					$.get(self.notFoundView).done(function(errorViewHtml){
-						for(let i in rtViews){
-							rtViews[i].innerHTML = errorViewHtml;
-						}
-					});
-				});
+				}else{
+					let errorViewHtml = Library.Filer.Current().getFile(self.notFoundView);
+					for(let i in rtViews){
+						rtViews[i].innerHTML = errorViewHtml;
+					}
+				}
 			})
 		}
 
-		public go = (route) => {
+		public go(route){
 			window.location.href = this.appendHahsbang(route);
 		}
 
-		public back = () => {
+		public back(){
 			window.history.back();
 		}
 
-		public register = (route, view, controller = undefined) => {
+		public register(route, view, controller = undefined){
 			route = this.prepRouteForQuerying(route);
 			let ctrlInstance = new controller();
 			this.routeMap[route] = {view : view, controller : ctrlInstance, route: route };
 		}
 
-		public registerNotFound = (view) => {
+		public registerNotFound(view){
 			this.notFoundView = view;
 		}
 
-		public defaultConvention = (defaultTransformation: Function) => {
+		public defaultConvention(defaultTransformation: Function){
 			this.defaultTransformation = defaultTransformation;
 		}
 
-		public onLoading = (callback: Function) => {
+		public onLoading(callback: Function){
 			this.onLoadingCallbacks.push(callback);
 		}
 
-		public onLoaded = (callback: Function) => {
+		public onLoaded(callback: Function){
 			this.onLoadedCallbacks.push(callback);
 		}
 
-		private appendHahsbang = (route) => {
+		private appendHahsbang(route){
 			
 			route = route.indexOf("#!") < 0 ? "#!" + route : route;
 			route = route.indexOf("/") < 0 ? "/" + route : route;
@@ -107,11 +109,11 @@ module Library{
 			return route;
 		}
 
-		private prepRouteForQuerying = (route) => {
+		private prepRouteForQuerying(route){
 			return route ? route.replace("/", "") : route;
 		}
 
-		private getCurrentRoute = () => {
+		private getCurrentRoute(){
 			let urlParts = window.location.href.split("#!");
 			let route = urlParts.length == 2 ? urlParts[1] : "/";
 			route = route.length > 0 ? route : "/";
@@ -120,7 +122,7 @@ module Library{
 			return route;
 		}
 
-		private getViewOfRoute = (route) => {
+		private getViewOfRoute(route){
 			let self = this;
 			let entry = self.getRouteEntry(route);
 			let view = entry ? entry.view : undefined;
@@ -134,14 +136,14 @@ module Library{
 			return view;
 		}
 
-		private getArgumentsOfRoute = (route) => {
+		private getArgumentsOfRoute(route){
 			let self = this;
 			let entry = self.getRouteEntry(route);
 
 			return entry ? self.getRouteArguments(route, entry.route) : {};
 		}
 
-		private getRouteEntry = (route) => {
+		private getRouteEntry(route){
 			let self = this;
 			let entry = self.routeCache[route] || self.routeMap[route];
 			let entryRoute = route;
@@ -160,7 +162,7 @@ module Library{
 			return entry;
 		}
 
-		private getRouteEntryWithWildcard = (route) => {
+		private getRouteEntryWithWildcard(route){
 			let self = this;
 			let routeParts = route.split("/");
 			let mapKeys = Object.keys(self.routeMap);
@@ -192,7 +194,7 @@ module Library{
 			return undefined;
 		}
 
-		private getRouteArguments = (route, routeKey) => {
+		private getRouteArguments(route, routeKey){
 			let resultObj = {};
 			let routeParts = route.split("/");
 			let routeKeyParts = routeKey.split("/");

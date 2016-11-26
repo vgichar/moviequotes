@@ -8,7 +8,7 @@
 * http://linqjs.codeplex.com/
 *--------------------------------------------------------------------------*/
 
-Enumerable = (function ()
+Enumerable = (function (): any
 {
     var Enumerable: any = function (getEnumerator)
     {
@@ -1120,12 +1120,12 @@ Enumerable = (function ()
 
         OrderBy: function (keySelector)
         {
-            return new OrderedEnumerable(this, keySelector, false);
+            return new OrderedEnumerable(this, keySelector, false, undefined);
         },
 
         OrderByDescending: function (keySelector)
         {
-            return new OrderedEnumerable(this, keySelector, true);
+            return new OrderedEnumerable(this, keySelector, true, undefined);
         },
 
         Reverse: function ()
@@ -2265,7 +2265,7 @@ Enumerable = (function ()
         )
     }
 
-    var SortContext = function (keySelector, descending, child)
+    var SortContext:any = function (keySelector, descending, child)
     {
         this.keySelector = keySelector;
         this.descending = descending;
@@ -2730,6 +2730,4 @@ Enumerable = (function ()
 
     // out to global
     return Enumerable;
-})()
-
-declare var Enumerable;
+})();

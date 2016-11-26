@@ -1,0 +1,18 @@
+<template>
+	<h1>{{title}}</h1>
+	<h2>{{quote}}</h2>
+
+	{%for (i in movies){%}
+		<div class="radio">
+			<label for="option-{{i}}">
+				<block name="components/component--radio" data="index:{{i}}"></block>
+				{{movies[i]}}
+			</label>
+		</div>
+	{%}%}
+	<hr>
+	<div>
+		<button class="btn btn-primary">Next</button>
+		<button class="btn btn-default">Skip</button>
+	</div>
+</template>

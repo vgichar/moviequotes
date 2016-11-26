@@ -2,16 +2,7 @@
 
 module Library{
 	export class Utils{
-		public static loadFile = (fileName, callback, fail) => {
-			let data = Library.Filer.Current().getFile(fileName);
-			if(data){
-				return callback(data);
-			}else{
-				return fail();
-			}
-		}
-
-		public static initArray = (size, fillChars) => {
+		public static initArray(size, fillChars){
 			let result = [];
 			for(let i = 0; i < length; i++){
 				result.push(fillChars);
@@ -20,7 +11,7 @@ module Library{
 			return result;
 		}
 
-		public static initArrayOrdered = (size, startChar = 0) => {
+		public static initArrayOrdered(size, startChar = 0){
 			let result = [];
 			for(let i = 0; i < size; i++){
 				result.push(startChar + i);
@@ -29,7 +20,7 @@ module Library{
 			return result;
 		}
 
-		public static today = (addDays = 0, addMonths = 0, addYears = 0) => {
+		public static today(addDays = 0, addMonths = 0, addYears = 0){
 			let today = new Date();
 			let desiredDate = new Date(today.getFullYear() + addYears, today.getMonth() + addMonths, today.getDate() + addDays, today.getHours(), today.getMinutes(), today.getSeconds());
 			let dd = desiredDate.getDate();
@@ -50,7 +41,7 @@ module Library{
 			return yyyy + '/' + m + '/' + d;
 		}
 
-		public static now = (addSeconds = 0, addMinutes = 0, addHours = 0, addDays = 0, addMonths = 0, addYears = 0) => {
+		public static now(addSeconds = 0, addMinutes = 0, addHours = 0, addDays = 0, addMonths = 0, addYears = 0){
 
 			let today = new Date();
 			let desiredDate = new Date(today.getFullYear() + addYears, today.getMonth() + addMonths, today.getDate() + addDays, today.getHours() + addHours, today.getMinutes() + addMinutes, today.getSeconds() + addSeconds);
@@ -99,7 +90,7 @@ module Library{
 			return yyyy + '/' + m + '/' + d + " " + h + ":" + mi + ":" + s;
 		}
 
-		public static hashCode = function(str) {
+		public static hashCode(str){
 			let hash = 0, i, chr, len;
 			if (str.length === 0) return hash;
 			for (i = 0, len = str.length; i < len; i++) {
@@ -110,7 +101,7 @@ module Library{
 			return Math.abs(hash);
 		}
 
-		public static flattenJSON = (data) => {
+		public static flattenJSON(data){
 		    var result = {};
 		    function recurse (cur, prop) {
 		        if (Object(cur) !== cur) {
@@ -137,7 +128,7 @@ module Library{
 		    return result;
 		}
 
-		public static unflattenJSON = (data) => {
+		public static unflattenJSON(data){
 		    "use strict";
 		    if (Object(data) !== data || Array.isArray(data))
 		        return data;
@@ -156,7 +147,7 @@ module Library{
 		    return resultholder[""] || resultholder;
 		};
 
-		public static slugify = (str : string) => {
+		public static slugify (str : string){
 			str = str
 		        .toLowerCase()
 		        .replace('\'','-');
@@ -167,13 +158,13 @@ module Library{
 		        .replace(new RegExp("--"), "-");
 		}
 
-		public static htmlEncode = (str: string) => {
+		public static htmlEncode(str: string){
 		  var el = document.createElement("div");
 		  el.innerHTML = str;
 		  return el.innerText;
 		}
 
-		public static escapeRegExp = (str:string) => {
+		public static escapeRegExp(str:string){
 		  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 		}
 	}

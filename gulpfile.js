@@ -8,6 +8,7 @@ var autoprefixer = require('gulp-autoprefixer');
 var replace = require('gulp-replace');
 var uglify = require('gulp-uglify');
 var uglifycss = require('gulp-uglifycss');
+var parse = require('gulp-parse');
 var fs = require('fs');
 
 var vendorScripts = [
@@ -32,34 +33,12 @@ var vendorFonts = [
   // 'bower_components/font-awesome/fonts/fontawesome-webfont.eot'
 ];
 
-var tempaltesFolder = 'src/views/templates/'
-var viewsFolder = 'src/views/'
-var viewsBundleFile = 'src/json/bundles/views.json';
-var templatesBundleFile = 'src/json/bundles/templates.json';
-
 function getFiles(dir) {
   return fs.readdirSync(dir)
     .filter(function(file) {
-      return fs.statSync(dir + file).isFile();
+      return fs.statSync((dir + "/" + file).replace('//', '/')).isFile();
     });
 }
-
-function createBundle(dir, files, prefix) {
-  var bundle = {};
-  for(var i in files){
-    var content = fs.readFileSync(dir + files[i], {encoding : "UTF-8"});
-    bundle[prefix + files[i]] = content;
-  }
-  return bundle;
-}
-
-function toListPart(strings, prefix){
-  var str = "";
-  for(var i in strings){
-    str += "\"" + (prefix ? prefix : "") + strings[i] + "\",\n";
-  }
-  return str
-};
 
 gulp.task('serve', ['watch'], function() {
   gulp.src('dist')
@@ -103,57 +82,48 @@ gulp.task("build-fast", [
   "copy-json-fast"
 ]);
 
-gulp.task("build-sass", function(){ 
-    gulp.src('src/sass/style.scss')
+function sassPipe(){
+	return gulp.src('src/sass/style.scss')
       .pipe(sassGlob())
       .pipe(sass())
       .pipe(autoprefixer({
             browsers: ['> 1%']
-        }))
+        }));
+}
+
+gulp.task("build-sass", function(){ 
+    sassPipe()
       .pipe(gulp.dest('dist/css/'));
 });
 
-gulp.task("build-ugly-sass", function(){ 
-    gulp.src('src/sass/style.scss')
-      .pipe(sassGlob())
-      .pipe(sass())
-      .pipe(autoprefixer({
-            browsers: ['> 1%']
-        }))
+gulp.task("build-ugly-sass", function(){
+    sassPipe()
       .pipe(uglifycss())
       .pipe(gulp.dest('dist/css/'));
 });
 
-gulp.task("build-typescript", function(){
-    gulp.src('src/ts/**/*')
+function tsPipe(){
+	return gulp.src('src/ts/**/*')
         .pipe(ts({
             out: 'compiled-ts.js',
             removeComments: false
         }))
-        .pipe(replace(/"\/\/viewspreload",(.|\n|\r)*"\/\/viewspreloadend",*/g, toListPart(getFiles(viewsFolder))))
-        .pipe(replace(/"\/\/viewsbundle",(.|\n|\r)*"\/\/viewsbundleend",*/g, toListPart(getFiles(viewsFolder))))
-        .pipe(replace(/"\/\/templatespreload",(.|\n|\r)*"\/\/templatespreloadend",*/g, toListPart(getFiles(tempaltesFolder, "templates/"))))
-        .pipe(replace(/"\/\/templatesbundle",(.|\n|\r)*"\/\/templatesbundleend",*/g, toListPart(getFiles(tempaltesFolder, "templates/"))))
+}
+
+gulp.task("build-typescript", function(){
+    tsPipe()
         .pipe(gulp.dest('dist/js'))
 });
 
 gulp.task("build-ugly-typescript", function(){
-    gulp.src('src/ts/**/*')
-        .pipe(ts({
-            out: 'compiled-ts.js',
-            removeComments: false
-        }))
-        .pipe(replace(/"\/\/viewspreload",(.|\n|\r)*"\/\/viewspreloadend",*/g, toListPart(getFiles(viewsFolder))))
-        .pipe(replace(/"\/\/viewsbundle",(.|\n|\r)*"\/\/viewsbundleend",*/g, toListPart(getFiles(viewsFolder))))
-        .pipe(replace(/"\/\/templatespreload",(.|\n|\r)*"\/\/templatespreloadend",*/g, toListPart(getFiles(tempaltesFolder, "templates/"))))
-        .pipe(replace(/"\/\/templatesbundle",(.|\n|\r)*"\/\/templatesbundleend",*/g, toListPart(getFiles(tempaltesFolder, "templates/"))))
+    tsPipe()
         .pipe(uglify())
         .pipe(gulp.dest('dist/js'))
 });
 
 gulp.task("copy-views", ['copy-json-fast'], function(){
-    gulp.src('src/views/**/*')
-        .pipe(gulp.dest('dist'))
+    // gulp.src('src/views/**/*')
+    //     .pipe(gulp.dest('dist'))
     gulp.src('src/index.html')
         .pipe(gulp.dest('dist'))
 });
@@ -167,13 +137,15 @@ gulp.task("copy-images", function(){
 gulp.task("copy-json", ["copy-json-fast"], function(){
     gulp.src('src/json/movie-quotes/*.json')
         .pipe(gulp.dest('dist/json/movie-quotes'))
+
     gulp.src('src/json/serie-quotes/*.json')
         .pipe(gulp.dest('dist/json/serie-quotes'))
 });
 
-gulp.task("copy-json-fast", ["preimport-views"], function(){
+gulp.task("copy-json-fast", ["parse-views"], function(){
     gulp.src('src/json/*.json')
         .pipe(gulp.dest('dist/json'))
+
     gulp.src('src/json/bundles/*.json')
         .pipe(gulp.dest('dist/json/bundles'))
 });
@@ -181,9 +153,8 @@ gulp.task("copy-json-fast", ["preimport-views"], function(){
 gulp.task("copy-static", function(){
     gulp.src('src/favicon.ico')
         .pipe(gulp.dest('dist'))
+
     gulp.src('src/robots.txt')
-        .pipe(gulp.dest('dist'))
-    gulp.src('src/sitemap.xml')
         .pipe(gulp.dest('dist'))
 });
 
@@ -192,15 +163,46 @@ gulp.task("copy-js", function(){
         .pipe(gulp.dest('dist/js'))
 });
 
+gulp.task('parse-views', ['preimport-views'], function(){
+  gulp.src('src/views/**/*.html')
+  .pipe(parse())
+  .pipe(gulp.dest('dist'));
+})
+
 gulp.task('preimport-views', function(){
-  var views = getFiles(viewsFolder);
-  var templates = getFiles(tempaltesFolder);
+    var bundles = fs.readFileSync("src/bundles.json", {encoding : "UTF-8"});
+    var bundlesJson = JSON.parse(bundles);
 
-  var viewsBundle = createBundle(viewsFolder, views, "");
-  var templatesBundle = createBundle(tempaltesFolder, templates, "templates/");
+    for (var i = bundlesJson.length - 1; i >= 0; i--) {
+    	var templateFile = bundlesJson[i].templateFile;
+    	var filesFolder = bundlesJson[i].filesFolder;
+    	var prefix = bundlesJson[i].prefix;
 
-  fs.writeFileSync(viewsBundleFile, JSON.stringify(viewsBundle));
-  fs.writeFileSync(templatesBundleFile, JSON.stringify(templatesBundle));
+      var dir = templateFile.split('/');
+      dir.pop();
+      dir = dir.join('/');
+      dir = 'dist/' + dir;
+      dir = dir.replace(/\/\//g, '/');
+      if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir);
+      }
+
+  		var files = getFiles(filesFolder);
+     	bundlesJson[i].items = files;
+
+        var bundle = {};
+        for(var j in bundlesJson[i].items){
+        var src = (filesFolder + "/" + bundlesJson[i].items[j]).replace('//', '/').replace(/^\//g, '');
+        var dest = (prefix + "/" + bundlesJson[i].items[j]).replace('//', '/').replace(/^\//g, '');
+
+        var content = fs.readFileSync(src, {encoding : "UTF-8"});
+        bundlesJson[i].items[j] = dest;
+        bundle[dest] = parse(content);
+      }
+      fs.writeFile("dist/" + templateFile, JSON.stringify(bundle));
+    }
+
+	fs.writeFile("dist/bundles.json", JSON.stringify(bundlesJson));
 })
 
 gulp.task("copy-vendor", function(){

@@ -1,6 +1,7 @@
 <template>
 	<div class="popular-movies">
-		{{for movie in movies}}
+		{%for (i in movies){%}
+		{%var movie = movies[i];%}
 			<div itemscope itemtype="http://schema.org/Movie" class="well row movie-row">
 				<div class="col-lg-2 col-sm-3">
 					<img itemprop="image" src="{{movie.verySmallCoverPhoto}}" />
@@ -11,11 +12,12 @@
 						(<span>{{movie.year}}</span>)
 					</h3>
 					<p>
-						{{for line in movie.quote.lines}}
-							<strong>{{line.character != undefined ? line.character + ": " : ""}}</strong>
+						{%for (j in movie.quote.lines){%}
+						{%var line = movie.quote.lines[j]; %}
+							<strong>{{(line.character != undefined ? line.character + ': ' : '')}}</strong>
 							<span>{{line.text}}</span>
 							<br>
-						{{endfor}}
+						{%}%}
 					</p>
 					<a itemprop="url" href="#!/movie-details/{{movie.slug}}">Read more...</a>
 					<div class="social">
@@ -27,6 +29,6 @@
 					</div>
 				</div>
 			</div>
-		{{endfor}}
+		{%}%}
 	</div>
 </template>

@@ -1,0 +1,17 @@
+[
+    {
+        "templateFile": "json/bundles/views.json",
+        "filesFolder": "src/views",
+        "prefix": ""
+    },
+    {
+        "templateFile": "json/bundles/templates.json",
+        "filesFolder": "src/views/templates",
+        "prefix": "templates"
+    },
+    {
+        "templateFile": "json/bundles/components.json",
+        "filesFolder": "src/views/components",
+        "prefix": "components"
+    }
+]

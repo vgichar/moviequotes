@@ -1,7 +1,7 @@
 /// <reference path="../_references.ts" />
 
 module Controllers{
-	export class MovieDetailsController{
+	export class MovieDetailsController extends BaseController{
 
 		public beforeLoad = (route, args) => {
 			let movie = new DB.MoviesDB().get(args.id);
@@ -9,7 +9,7 @@ module Controllers{
 
 			$("title").text("Movie Quotes - " + movie.title);
 			
-			IndexController.Templater.template("movie-details--list-quotes", {
+			this.Templater.template("templates/movie-details--list-quotes", {
 				"movie": movie,
 				"quotes": quotes.ToArray()
 			});

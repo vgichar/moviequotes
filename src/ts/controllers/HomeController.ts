@@ -1,7 +1,7 @@
 /// <reference path="../_references.ts" />
 
 module Controllers{
-	export class HomeController{
+	export class HomeController extends BaseController{
 
 		public beforeLoad = (route, args) => {
 			$("title").text("Movie Quotes - Popular movies");
@@ -17,7 +17,7 @@ module Controllers{
 				}
 			}
 
-			IndexController.Templater.template("home--popular-movies", {movies: movies});
+			this.Templater.template("templates/home--popular-movies", {movies: movies});
 		}
 	}
 }
