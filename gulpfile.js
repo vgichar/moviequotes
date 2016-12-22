@@ -260,7 +260,7 @@ function parse(content) {
 			var content = evalMatches[i].replace(evalRegex, "$1");
 			html = html.replace("{%" + content + "%}", '"; ' + content  + ' res += "');
 		}
-		return html.replace(/\r\n/g, '"\r\n+ "');
+		return html.replace(/\r\n/g, '"\\\r\\\n+ "');
 	}
 
 	if(content != undefined){
