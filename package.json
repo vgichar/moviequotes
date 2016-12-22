@@ -25,6 +25,7 @@
     "gulp-server-livereload": "^1.8.2",
     "gulp-typescript": "^2.13.5",
     "gulp-uglify": "^2.0.0",
-    "gulp-uglifycss": "^1.0.6"
+    "gulp-uglifycss": "^1.0.6",
+    "through2": "^2.0.3"
   }
 }

@@ -8,8 +8,8 @@ var autoprefixer = require('gulp-autoprefixer');
 var replace = require('gulp-replace');
 var uglify = require('gulp-uglify');
 var uglifycss = require('gulp-uglifycss');
-var parse = require('./custom_node_modules/gulp-parse');
 var fs = require('fs');
+var through = require('through2');
 
 var vendorScripts = [
 	'bower_components/bootstrap/dist/js/bootstrap.min.js',
@@ -219,3 +219,59 @@ gulp.task("copy-vendor", function(){
           .pipe(gulp.dest('dist/css/fonts'))
     }
 });
+
+function parse(content) {
+
+	var buildRegex = function(start, end){
+		var content = "(((.|\\n|\\r)(?!" + end + "))*.)";
+		var regex = new RegExp(start  + content + end, 'g');
+
+		return regex;
+	}
+
+	var trim = function (text, char){
+		while(text[0] == char){
+			text = text.substring(1);
+		}
+		while(text[text.length - 1] == char){
+			text = text.substring(-1);
+		}
+		return text;
+	}
+	
+	var parse = function(html){
+		html = html.replace(/"/g, '\\"');
+		html = '(function(){var res = "' + html;
+		html = html + '"; return res;})()';
+
+		var concatRegex = buildRegex("{{", "}}");
+		var concatMatches = html.match(concatRegex);
+		for(var i in concatMatches){
+			var content = concatMatches[i].replace(concatRegex, "$1");
+			html = html.replace("{{" + content + "}}", '" + ' + content  + ' + "');
+		}
+
+		var evalRegex = buildRegex("{%", "%}");
+		var evalMatches = html.match(evalRegex);
+		for(var i in evalMatches){
+			var content = evalMatches[i].replace(evalRegex, "$1");
+			html = html.replace("{%" + content + "%}", '"; ' + content  + ' res += "');
+		}
+		return html.replace(/\r\n/g, '"\r\n+ "');
+	}
+
+	if(content != undefined){
+		return parse(content);
+	}
+	
+	return through.obj(function (file, enc, cb) {
+        if (file.isBuffer()) {
+			var html = file.contents.toString();
+			
+			html = parse(html);
+
+			file.contents = new Buffer(html);
+		}
+		cb(null, file);
+	});
+};
