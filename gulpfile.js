@@ -178,14 +178,17 @@ gulp.task('preimport-views', function(){
     	var filesFolder = bundlesJson[i].filesFolder;
     	var prefix = bundlesJson[i].prefix;
 
-      var dir = templateFile.split('/');
-      dir.pop();
-      dir = dir.join('/');
-      dir = 'dist/' + dir;
-      dir = dir.replace(/\/\//g, '/');
-      if (!fs.existsSync(dir)){
-        fs.mkdirSync(dir);
-      }
+		var dirParts = templateFile.split('/');
+		dirParts.pop();
+		dirParts.unshift("dist");
+		dirParts.reverse();
+		for(var l in dirParts){
+			dir = dirParts.slice(- l - 1).reverse().join('/');
+			dir = dir.replace(/\/\//g, '/');
+			if (!fs.existsSync(dir)){
+				fs.mkdirSync(dir);
+			}
+		}
 
   		var files = getFiles(filesFolder);
      	bundlesJson[i].items = files;
