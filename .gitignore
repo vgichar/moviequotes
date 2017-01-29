@@ -2,4 +2,7 @@
 /bower_components
 /node_modules
 /dist
-/scraper
+/scraper/finished
+/scraper/unfinished
+/scraper/movie-quotes
+/scraper/serie-quotes
